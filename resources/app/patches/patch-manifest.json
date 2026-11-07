@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "version": 1,
+  "region": "br",
+  "textRegion": "zh",
+  "hosts": [
+    "narutowebgame.com",
+    "oasgames.com"
+  ],
+  "patches": []
+}

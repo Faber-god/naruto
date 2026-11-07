@@ -1,0 +1,9 @@
+{
+  "version": "1.8.0",
+  "builtAt": "2026-11-07T12:20:00+08:00",
+  "electron": "11.5.0",
+  "platform": "win32",
+  "architecture": "x64",
+  "notes": "v1.8 BR Chinese patch set excludes naruto.include.swf for AI auto mode compatibility",
+  "patchedFrom": "1.7"
+}

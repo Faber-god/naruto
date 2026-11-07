@@ -1,0 +1,21 @@
+NARUTO-WINDOWS 1.2.0 — GUIA RÁPIDO
+
+1. Clique com o botão direito no ZIP e escolha “Extrair tudo”.
+2. Abra a pasta extraída.
+3. Clique duas vezes em Install-Naruto-Windows.bat.
+4. Pressione ENTER para usar a pasta recomendada.
+5. Ao terminar, abra Naruto-Windows pelo atalho da Área de Trabalho.
+6. Na primeira execução, siga o assistente na tela.
+
+No assistente:
+- Escolha um perfil BR ou crie um novo.
+- Selecione a conta do cliente oficial, se quiser recuperar a sessão.
+- Digite o número real do servidor BR (por exemplo, S810 -> 810).
+- Se não tiver o cliente oficial, escolha login normal.
+
+IMPORTANTE:
+- A recuperação automática é opcional. O login normal continua disponível.
+- Feche completamente o cliente oficial antes de tentar recuperar a sessão.
+- Não envie arquivos Cookies, senhas ou URLs assinadas para ninguém.
+- O desinstalador preserva os perfis e dados do usuário em AppData.
+- Esta distribuição é um pacote de instalação por PowerShell, não um instalador EXE assinado.
