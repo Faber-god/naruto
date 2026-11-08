@@ -3184,6 +3184,7 @@ var GameSessions = class {
   }
   create(saved, entry, preparedProfile, profileSlot) {
     var _a, _b, _c, _d;
+    const startupStartedAt = Date.now();
     const inspectOnStart = this.inspectNextGame;
     this.inspectNextGame = false;
     const region = validRegion(saved.region) ? saved.region : "br";
@@ -3214,8 +3215,17 @@ var GameSessions = class {
     view.webContents.setAudioMuted(true);
     const contents = view.webContents;
     const session5 = contents.session;
+    const targetedPatch = process.env.NARUTO_TARGETED_PATCH === "1";
     try {
-      patchService.attach(session5, region);
+      if (targetedPatch) {
+        void patchService.attachTargeted(contents, region).then(attached => {
+          if (!attached) patchService.attach(session5, region);
+          this.diagnostic(`PATCH_ATTACH_MS=${Date.now() - startupStartedAt}`);
+        });
+      } else {
+        patchService.attach(session5, region);
+        this.diagnostic(`PATCH_ATTACH_MS=${Date.now() - startupStartedAt}`);
+      }
     } catch (error) {
       console.error("PATCH_ATTACH_FAILED", error);
     }
@@ -3248,6 +3258,7 @@ var GameSessions = class {
     }
     this.sessionCleanup.set(contentsId, () => {
       try {
+        void patchService.detachTargeted(contents);
         patchService.detach(session5);
       } catch (error) {
         console.error("PATCH_DETACH_FAILED", error);
@@ -3270,7 +3281,14 @@ var GameSessions = class {
       event.preventDefault();
     });
     view.webContents.on("did-navigate", clearRefresh);
+    let flashTimer;
+    let flashReadyLogged = false;
+    const clearFlashTimer = () => {
+      if (flashTimer) clearInterval(flashTimer);
+      flashTimer = void 0;
+    };
     view.webContents.once("destroyed", () => {
+      clearFlashTimer();
       clearRefresh();
       this.releaseSession(contentsId);
     });
@@ -3288,12 +3306,42 @@ var GameSessions = class {
         update("loading");
       }
     });
-    const ready = () => {
+    const readyStages = /* @__PURE__ */ new Set();
+    const ready = (stage) => {
       if (tab.state === "loading") update("ready");
+      if (!readyStages.has(stage)) {
+        readyStages.add(stage);
+        this.diagnostic(`GAME_READY_${stage}_MS=${Date.now() - startupStartedAt}`);
+      }
     };
-    view.webContents.on("dom-ready", ready);
-    view.webContents.on("did-finish-load", ready);
-    view.webContents.on("did-stop-loading", ready);
+    const pollFlash = () => {
+      if (flashTimer || flashReadyLogged) return;
+      let attempts = 0;
+      flashTimer = setInterval(async () => {
+        attempts++;
+        if (contents.isDestroyed() || attempts > 120) {
+          clearFlashTimer();
+          return;
+        }
+        try {
+          const progress = await contents.executeJavaScript(
+            "(() => { const el = document.querySelector('object[type=\"application/x-shockwave-flash\"], embed[type=\"application/x-shockwave-flash\"]'); return el && typeof el.PercentLoaded === 'function' ? el.PercentLoaded() : -1; })()"
+          );
+          if (Number(progress) >= 100) {
+            flashReadyLogged = true;
+            clearFlashTimer();
+            this.diagnostic(`GAME_FLASH_100_MS=${Date.now() - startupStartedAt}`);
+          }
+        } catch {}
+      }, 500);
+      flashTimer.unref?.();
+    };
+    view.webContents.on("dom-ready", () => {
+      ready("DOM");
+      pollFlash();
+    });
+    view.webContents.on("did-finish-load", () => ready("LOAD"));
+    view.webContents.on("did-stop-loading", () => ready("STOP"));
     const service = (url) => {
       try {
         const host = new URL(url).hostname;
@@ -3370,11 +3418,13 @@ var GameSessions = class {
     const open = () => {
       if (contents.isDestroyed()) return;
       if (inspectOnStart) contents.openDevTools({ mode: "detach" });
+      this.diagnostic(`GAME_NAVIGATION_START_MS=${Date.now() - startupStartedAt}`);
       void contents.loadURL(initialURL).catch(() => {
       });
     };
     const restore = (_d = profile == null ? void 0 : profile.ready.catch(() => {
     })) != null ? _d : Promise.resolve();
+    void restore.then(() => this.diagnostic(`GAME_PROFILE_READY_MS=${Date.now() - startupStartedAt}`));
     const proxy = process.env.NARUTO_PROXY;
     const route = this.isolated ? { proxyRules: "direct://" } : proxy ? { proxyRules: proxy } : null;
     if (route) void Promise.all([restore, session5.setProxy(route)]).then(open).catch(() => {
