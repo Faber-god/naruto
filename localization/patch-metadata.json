@@ -1,0 +1,150 @@
+{
+  "assets/miniGame/800191.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "runtime-verified",
+    "note": "国服小游戏界面资源；进入小游戏前必须回归验证"
+  },
+  "flash/activity/activityplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "活动列表与活动入口中文资源"
+  },
+  "flash/arena/arenaplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "竞技场中文资源"
+  },
+  "flash/battle/battleplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "战斗界面中文资源"
+  },
+  "flash/cardpackage/cardpackageplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "卡牌包裹中文资源"
+  },
+  "flash/core/naruto.exui.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "runtime-verified",
+    "note": "通用扩展界面；已与 mainUI 联合运行验证"
+  },
+  "flash/crew/roleprofileui.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "组织成员资料中文资源"
+  },
+  "flash/doublearena/doublearenaplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "双人竞技场中文资源"
+  },
+  "flash/equipment/equipmentplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "装备系统中文资源"
+  },
+  "flash/friend/friendplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "好友系统中文资源"
+  },
+  "flash/guild/guildplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "组织系统中文资源"
+  },
+  "flash/home/homeplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "家园系统中文资源"
+  },
+  "flash/hud/mainUI.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "runtime-verified",
+    "note": "主界面与导航中文资源"
+  },
+  "flash/huntlife/huntlifeplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "八门/猎命生活系统中文资源"
+  },
+  "flash/majorrole/ui.talent.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "主角天赋界面中文资源"
+  },
+  "flash/map/mapplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "地图界面中文资源"
+  },
+  "flash/miaokiyama/miaokiyamaplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "妙木山系统中文资源"
+  },
+  "flash/ninja/ninjaplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "忍者系统中文资源"
+  },
+  "flash/ninjaaid/ninjaaidplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "忍者协助系统中文资源"
+  },
+  "flash/ninjamanual/ninjamanualplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "忍者图鉴系统中文资源"
+  },
+  "flash/operatingactivity/operatingactivityplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7-khub-v10",
+    "compatibility": "runtime-verified",
+    "note": "运营活动中文资源；保留 KHUB v10 兼容修复"
+  },
+  "flash/tabard/tabardplugin.swf": {
+    "strategy": "whole-swf",
+    "sourceVersion": "legacy-zh-1.7",
+    "compatibility": "manifest-verified",
+    "note": "忍服系统中文资源"
+  },
+  "config/i18n/translatedkeycfg.cfg": {
+    "strategy": "zlib-config",
+    "sourceVersion": "PT_NarutoAlpha9.33Build300",
+    "sourceUrl": "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.33Build300/config/i18n/TranslatedKeyCFG.cfg",
+    "sourceSha256": "a074d82d180daa6718fd2ea0a85a4cc3ddd74c07e94bc14a314dd17da4a1bf6d",
+    "compatibility": "text-only-partial",
+    "note": "动态文本词典；按现有记录格式修改，保留控制字节、键名和占位符"
+  },
+  "flash/ai/AILogTemplate.xml": {
+    "strategy": "zlib-config",
+    "sourceVersion": "PT_NarutoAlpha9.39Build301",
+    "sourceUrl": "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.39Build301/flash/ai/AILogTemplate.xml",
+    "sourceSha256": "2b52469294dfd6b0a5fffc6d46f50583707957331038835124485d1dff3c2041",
+    "compatibility": "text-only",
+    "note": "托管日志与枚举中文模板；不替换 AIPlugin/AIManageUI"
+  }
+}

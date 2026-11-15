@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "urls": [
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.39Build301/entry.swf",
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.39Build301/resource.cfg",
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.17Build302/flash/core/naruto.core.swf",
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.24Build301/flash/core/naruto.ui.swf",
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha8.72Build301/flash/core/PluginConfig.xml",
+    "https://cdnnaruto-pt.oasgames.com/PT_NarutoAlpha9.33Build300/config/i18n/TranslatedKeyCFG.cfg"
+  ]
+}

@@ -1,5 +1,6 @@
 "use strict";
 const patchService = require("./patch-service.js");
+const { UpdateService } = require("./update-service.js");
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -66,10 +67,10 @@ var init_appearance = __esm({
 
 // src/main/config.ts
 function defaultLayout() {
-  return { version: 1, tabs: [], activeId: null, preferences: { muted: false, flash: "34", theme: "system", titleBarColor: null, region: "br", lobbyBackground: null, lobbyMotion: true }, bounds: { width: 1280, height: 850 }, maximized: false, fullscreen: false };
+  return { version: 1, tabs: [], activeId: null, preferences: { muted: false, flash: "34", theme: "dark", titleBarColor: null, region: "br", lobbyBackground: null, lobbyMotion: true, updateAutoCheck: true }, update: { lastCheckedAt: 0, lastResult: "", lastVersion: "", consecutiveFailures: 0, notifiedVersion: "" }, bounds: { width: 1280, height: 850 }, maximized: false, fullscreen: false };
 }
 function normalizeLayout(raw) {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
   if (!raw || typeof raw !== "object" || raw.version !== 1) return defaultLayout();
   const value = raw;
   const seen = /* @__PURE__ */ new Set();
@@ -90,12 +91,24 @@ function normalizeLayout(raw) {
     preferences: {
       muted: ((_c = value.preferences) == null ? void 0 : _c.muted) === true,
       flash: ((_d = value.preferences) == null ? void 0 : _d.flash) === "31" ? "31" : "34",
-      theme: validTheme((_e = value.preferences) == null ? void 0 : _e.theme) ? value.preferences.theme : "system",
+      theme: validTheme((_e = value.preferences) == null ? void 0 : _e.theme) ? value.preferences.theme : "dark",
       titleBarColor: validTitleColor((_f = value.preferences) == null ? void 0 : _f.titleBarColor) ? value.preferences.titleBarColor.toLowerCase() : null,
       region: validRegion((_g = value.preferences) == null ? void 0 : _g.region) ? value.preferences.region : "br",
       lobbyBackground: validTitleColor((_h = value.preferences) == null ? void 0 : _h.lobbyBackground) ? value.preferences.lobbyBackground.toLowerCase() : null,
-      lobbyMotion: ((_i = value.preferences) == null ? void 0 : _i.lobbyMotion) !== false
+      lobbyMotion: ((_i = value.preferences) == null ? void 0 : _i.lobbyMotion) !== false,
+      updateAutoCheck: ((_j = value.preferences) == null ? void 0 : _j.updateAutoCheck) !== false
     },
+    update: (() => {
+      var _k, _l, _m, _n;
+      const item = value.update;
+      return {
+        lastCheckedAt: Number.isFinite(item == null ? void 0 : item.lastCheckedAt) && item.lastCheckedAt > 0 ? Math.min(item.lastCheckedAt, Date.now() + 300e3) : 0,
+        lastResult: ["", "ok", "error", "up-to-date", "available", "blocked", "ready", "installing"].includes((_k = item == null ? void 0 : item.lastResult) != null ? _k : "") ? (_l = item == null ? void 0 : item.lastResult) != null ? _l : "" : "",
+        lastVersion: typeof (item == null ? void 0 : item.lastVersion) === "string" && /^v?\d{1,6}\.\d{1,6}\.\d{1,6}$/.test(item.lastVersion) ? item.lastVersion : "",
+        consecutiveFailures: Number.isFinite(item == null ? void 0 : item.consecutiveFailures) ? Math.max(0, Math.min(99, Math.round(item.consecutiveFailures))) : 0,
+        notifiedVersion: typeof (item == null ? void 0 : item.notifiedVersion) === "string" && /^v?\d{1,6}\.\d{1,6}\.\d{1,6}$/.test(item.notifiedVersion) ? item.notifiedVersion : ""
+      };
+    })(),
     bounds: {
       width: Math.round(Math.max(800, Math.min(3840, Number(bounds == null ? void 0 : bounds.width) || 1280))),
       height: Math.round(Math.max(560, Math.min(2160, Number(bounds == null ? void 0 : bounds.height) || 850))),
@@ -1212,7 +1225,7 @@ async function runWindowsSmoke(win2, root2, shellURL2, fixture2) {
     assertDone(dataDir.startsWith(testRoot + import_path8.default.sep), "isolated-data-path");
     const files = import_fs4.default.readdirSync(dataDir);
     assertDone(files.every((file) => !/profiles|credentials|sessions/i.test(file)), "no-real-profile-data");
-    assertDone(win2.getTitle() === "Naruto OS", "native-window-title");
+    assertDone(win2.getTitle() === "NARUTO Faber", "native-window-title");
     assertDone(win2.getBrowserView() === null, "no-game-browser-view");
     assertDone(win2.webContents.getURL() === shellURL2, "local-shell-url");
     assertDone(await win2.webContents.executeJavaScript('document.readyState === "complete" && !!document.querySelector("#surface") && !!document.querySelector("#lobby")'), "renderer-dom-loaded");
@@ -2454,7 +2467,7 @@ var init_integration = __esm({
     init_traffic_lights();
     pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     origin = new URL(ENTRY_URL).origin;
-    fixture = `<!doctype html><html><head><meta charset="utf-8"><title>Offline fixture</title><style>body{margin:0;background:#e8ede3;color:#38432f;font:16px sans-serif}main{padding:50px}form{display:grid;gap:12px;width:280px}input,button{padding:12px;font:inherit}h1{font-size:22px}p{font-size:13px}object{margin:0 auto}</style></head><body><main><h1>Naruto OS \xB7 \u9694\u79BB\u9A8C\u8BC1\u9875\u9762</h1><p>\u5408\u6210\u8D26\u53F7 \xB7 \u4E0D\u8FDE\u63A5\u6E38\u620F\u670D\u52A1\u5668</p><form method="post" action="/pt/fixture-success"><label>Conta<input name="username" id="username" autocomplete="username"></label><label>Senha<input name="password" id="password" type="password"></label><button type="submit">Entrar</button></form></main></body></html>`;
+    fixture = `<!doctype html><html><head><meta charset="utf-8"><title>Offline fixture</title><style>body{margin:0;background:#e8ede3;color:#38432f;font:16px sans-serif}main{padding:50px}form{display:grid;gap:12px;width:280px}input,button{padding:12px;font:inherit}h1{font-size:22px}p{font-size:13px}object{margin:0 auto}</style></head><body><main><h1>NARUTO Faber \xB7 \u9694\u79BB\u9A8C\u8BC1\u9875\u9762</h1><p>\u5408\u6210\u8D26\u53F7 \xB7 \u4E0D\u8FDE\u63A5\u6E38\u620F\u670D\u52A1\u5668</p><form method="post" action="/pt/fixture-success"><label>Conta<input name="username" id="username" autocomplete="username"></label><label>Senha<input name="password" id="password" type="password"></label><button type="submit">Entrar</button></form></main></body></html>`;
     success = `<!doctype html><html><head><meta charset="utf-8"><title>Flash fixture</title><style>body{margin:0;background:#202420;color:#dae1d3;text-align:center;font:14px sans-serif}p{margin:15px}</style></head><body><p>Flash \u6D4B\u8BD5\u753B\u9762 \xB7 \u7EFF\u8272\u533A\u57DF\u5E94\u7531\u771F\u5B9E PPAPI \u63D2\u4EF6\u6E32\u67D3</p><object id="flash" type="application/x-shockwave-flash" data="/fixture.swf" width="600" height="300"><param name="movie" value="/fixture.swf"><param name="wmode" value="opaque"></object></body></html>`;
   }
 });
@@ -5404,8 +5417,8 @@ function windowOptions(platform, bounds, backgroundColor) {
     ...bounds,
     minWidth: 800,
     minHeight: 560,
-    title: "Naruto OS",
-    ...platform === "darwin" ? { titleBarStyle: "hidden", trafficLightPosition: { x: 14, y: 15 } } : {},
+    title: "NARUTO Faber",
+    ...platform === "darwin" ? { titleBarStyle: "hidden", trafficLightPosition: { x: 14, y: 15 } } : platform === "win32" ? { frame: false } : {},
     backgroundColor,
     show: false
   };
@@ -5419,6 +5432,19 @@ function menuPlatform(platform) {
 
 // src/main/index.ts
 var root = import_path10.default.resolve(__dirname, "../..");
+var messagesConfig = null;
+function loadMessages() {
+  const file = import_path10.default.join(root, "config/messages.json");
+  try {
+    const raw = import_fs6.default.readFileSync(file, "utf8").replace(/^﻿/, "");
+    const parsed = JSON.parse(raw);
+    const label = parsed && parsed.ui && parsed.ui.gameVersion;
+    if (typeof label !== "string" || !label.trim()) throw new Error("messages.ui.gameVersion is missing");
+    return parsed;
+  } catch (error) {
+    throw new Error("messages-config-invalid: " + (error && error.message ? error.message : "unknown"));
+  }
+}
 var windowsSmoke = process.env.NARUTO_TEST_MODE === "1" && process.env.NARUTO_TEST_WINDOWS_SMOKE === "1";
 if (windowsSmoke) {
   const dataDir = import_path10.default.resolve(process.env.NARUTO_DATA_DIR || "");
@@ -5439,8 +5465,10 @@ var testLoginFixture = (() => {
   if (url.protocol !== "http:" || url.hostname !== "127.0.0.1") throw new Error("login fixture must use loopback HTTP");
   return url.href;
 })();
-import_electron8.app.setName("Naruto OS");
+import_electron8.app.setName("NARUTO Faber");
+import_electron8.app.commandLine.appendSwitch("lang", "zh-CN");
 if (process.env.NARUTO_DATA_DIR) import_electron8.app.setPath("userData", import_path10.default.resolve(process.env.NARUTO_DATA_DIR));
+else import_electron8.app.setPath("userData", import_path10.default.join(import_electron8.app.getPath("appData"), "Naruto-Windows"));
 var config = new ConfigStore(import_electron8.app.getPath("userData"));
 var layout = config.read();
 import_electron8.nativeTheme.themeSource = layout.preferences.theme;
@@ -5466,6 +5494,7 @@ var win;
 var games;
 var navigation;
 var webLogin;
+var updateService = null;
 var settingsOpen = false;
 var modalOpen = false;
 var profilePickerOpen = false;
@@ -5750,10 +5779,14 @@ function state() {
     activeId: active,
     preferences: layout.preferences,
     settingsOpen,
+    windowMaximized: !!(win && !win.isDestroyed() && win.isMaximized()),
     prompt,
     recovery,
     refresh: refreshState(),
     flash,
+    version: import_electron8.app.getVersion(),
+    update: updateService ? updateService.snapshot() : null,
+    messages: messagesConfig,
     notice,
     profiles: accountProfiles.list().map(({ id, region, slot, name, serverNote }) => {
       var _a;
@@ -5837,6 +5870,18 @@ safeHandler("shell:command", async (event, input) => {
   assertShell(event);
   return command(input);
 });
+safeHandler("shell:window-command", (event, input) => {
+  assertShell(event);
+  if (!win || win.isDestroyed()) throw new Error("window-unavailable");
+  const action = typeof input === "string" ? input : "";
+  if (action === "minimize") win.minimize();
+  else if (action === "toggle-maximize") {
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+  } else if (action === "close") win.close();
+  else throw new Error("unknown-window-command");
+  return true;
+});
 safeHandler("shell:br-recovery-accounts", (event, input) => {
   assertShell(event);
   const profileId = input && typeof input.profileId === "string" ? input.profileId : "";
@@ -5880,6 +5925,39 @@ safeHandler("shell:remove", (event, id) => {
   assertShell(event);
   if (!settingsOpen || typeof id !== "string") throw new Error("\u8BF7\u5148\u6253\u5F00\u8BBE\u7F6E");
   return vault.remove(id);
+});
+function requireUpdateService() {
+  if (!updateService) throw new Error(messagesConfig && messagesConfig.ui && messagesConfig.ui.update ? messagesConfig.ui.update.errorLayout : "update-unavailable");
+  return updateService;
+}
+safeHandler("shell:update-status", (event) => {
+  assertShell(event);
+  return updateService ? updateService.snapshot() : null;
+});
+safeHandler("shell:update-check", (event) => {
+  assertShell(event);
+  if (!settingsOpen) throw new Error(messagesConfig.ui.update.errorLayout);
+  return requireUpdateService().check({ manual: true });
+});
+safeHandler("shell:update-download", (event) => {
+  assertShell(event);
+  if (!settingsOpen) throw new Error(messagesConfig.ui.update.errorLayout);
+  return requireUpdateService().download();
+});
+safeHandler("shell:update-cancel", (event) => {
+  assertShell(event);
+  if (!settingsOpen) throw new Error(messagesConfig.ui.update.errorLayout);
+  return requireUpdateService().cancel();
+});
+safeHandler("shell:update-install", (event) => {
+  assertShell(event);
+  if (!settingsOpen) throw new Error(messagesConfig.ui.update.errorLayout);
+  return requireUpdateService().install();
+});
+safeHandler("shell:update-open-page", (event) => {
+  assertShell(event);
+  if (!settingsOpen) throw new Error(messagesConfig.ui.update.errorLayout);
+  return requireUpdateService().openPage();
 });
 safeHandler("game:candidates", async (event, input) => {
   var _a;
@@ -6162,6 +6240,12 @@ async function command(input) {
         report("Flash \u504F\u597D\u5DF2\u4FDD\u5B58\uFF0C\u4E0B\u6B21\u542F\u52A8\u751F\u6548");
       }
       break;
+    case "update-auto-check":
+      if (typeof input.value === "boolean") {
+        layout.preferences.updateAutoCheck = input.value;
+        changed();
+      }
+      break;
     case "dismiss-prompt":
       if (games.activeId) pending.delete(games.activeId);
       broadcast();
@@ -6196,7 +6280,7 @@ function menu() {
     }
   };
   const applicationMenu = import_electron8.Menu.buildFromTemplate([
-    { label: "Naruto OS", submenu: [{ role: "about" }, { type: "separator" }, { label: "\u8BBE\u7F6E\u2026", accelerator: "CmdOrCtrl+,", click: perform("settings") }, { type: "separator" }, ...menuPlatform(process.platform).application, { role: "quit" }] },
+    { label: "NARUTO Faber", submenu: [{ role: "about" }, { type: "separator" }, { label: "\u8BBE\u7F6E\u2026", accelerator: "CmdOrCtrl+,", click: perform("settings") }, { type: "separator" }, ...menuPlatform(process.platform).application, { role: "quit" }] },
     { label: "\u6E38\u620F", submenu: [
       { label: "\u542F\u52A8\u9875", accelerator: "CmdOrCtrl+Shift+H", click: perform("home") },
       { label: "\u65B0\u5EFA\u6807\u7B7E", accelerator: "CmdOrCtrl+T", click: perform("new") },
@@ -6237,6 +6321,23 @@ function updateMenuItems(current = state()) {
 }
 async function createWindow() {
   var _a, _b;
+  messagesConfig = loadMessages();
+  updateService = new UpdateService({
+    root,
+    installRoot: import_path10.default.dirname(process.execPath),
+    userData: import_electron8.app.getPath("userData"),
+    messages: () => messagesConfig,
+    getLayout: () => layout,
+    saveLayout: () => saveLayout(),
+    getWindow: () => win,
+    broadcast: () => broadcast(),
+    report: (message) => report(message),
+    hasGameSessions: () => !!(games && games.tabs.length),
+    requestQuit: () => {
+      quitApproved = true;
+      if (win && !win.isDestroyed()) win.close();
+    }
+  });
   const restoreMaximized = layout.maximized;
   const restoreFullscreen = layout.fullscreen;
   const b = layout.bounds;
@@ -6244,13 +6345,17 @@ async function createWindow() {
     delete b.x;
     delete b.y;
   }
+  const appIcon = import_path10.default.join(root, "assets/app-icon.png");
+  const hasAppIcon = import_fs6.default.existsSync(appIcon);
   win = new import_electron8.BrowserWindow({
-    ...windowOptions(process.platform, b, import_electron8.nativeTheme.shouldUseDarkColors ? "#202020" : "#fafafa"),
+    ...windowOptions(process.platform, b, import_electron8.nativeTheme.shouldUseDarkColors ? "#0b0706" : "#efe6d8"),
+    ...(hasAppIcon ? { icon: appIcon } : {}),
     webPreferences: { preload: import_path10.default.join(root, "dist/preload/shell.js"), nodeIntegration: false, contextIsolation: true, sandbox: true, enableRemoteModule: false, webviewTag: false }
   });
   attachTrafficLights(win);
-  const icon = import_path10.default.join(root, "assets/app-icon.png");
-  if (import_fs6.default.existsSync(icon)) (_a = import_electron8.app.dock) == null ? void 0 : _a.setIcon(icon);
+  win.on("maximize", () => broadcast());
+  win.on("unmaximize", () => broadcast());
+  if (hasAppIcon) (_a = import_electron8.app.dock) == null ? void 0 : _a.setIcon(appIcon);
   else if (import_fs6.default.existsSync(import_path10.default.join(root, "assets/character-icon-chibi.png"))) (_b = import_electron8.app.dock) == null ? void 0 : _b.setIcon(import_path10.default.join(root, "assets/character-icon-chibi.png"));
   win.webContents.on("will-navigate", (e) => e.preventDefault());
   win.webContents.on("new-window", (e) => e.preventDefault());
@@ -6301,7 +6406,7 @@ async function createWindow() {
       event.preventDefault();
       if (confirming) return;
       confirming = true;
-      void import_electron8.dialog.showMessageBox(win, { type: "question", title: "\u7ED3\u675F\u6E38\u620F\uFF1F", message: "\u9000\u51FA Naruto OS\uFF1F", detail: "\u6240\u6709\u6E38\u620F\u4F1A\u8BDD\u90FD\u4F1A\u7ED3\u675F\u3002\u4E0B\u6B21\u542F\u52A8\u663E\u793A\u4E3B\u9875\u9762\uFF0C\u6E38\u620F\u9700\u91CD\u65B0\u6253\u5F00\u3002", buttons: ["\u7EE7\u7EED\u6E38\u620F", "\u9000\u51FA"], defaultId: 0, cancelId: 0, noLink: true }).then((result) => {
+      void import_electron8.dialog.showMessageBox(win, { type: "question", title: "\u7ED3\u675F\u6E38\u620F\uFF1F", message: "\u9000\u51FA NARUTO Faber\uFF1F", detail: "\u6240\u6709\u6E38\u620F\u4F1A\u8BDD\u90FD\u4F1A\u7ED3\u675F\u3002\u4E0B\u6B21\u542F\u52A8\u663E\u793A\u4E3B\u9875\u9762\uFF0C\u6E38\u620F\u9700\u91CD\u65B0\u6253\u5F00\u3002", buttons: ["\u7EE7\u7EED\u6E38\u620F", "\u9000\u51FA"], defaultId: 0, cancelId: 0, noLink: true }).then((result) => {
         confirming = false;
         if (result.response === 1) {
           quitApproved = true;
@@ -6316,6 +6421,7 @@ async function createWindow() {
       savingSessions = true;
       saveLayout();
       shuttingDown = true;
+      if (updateService) updateService.shutdown();
       pending.clear();
       candidates.clear();
       games.destroy();
@@ -6334,6 +6440,8 @@ async function createWindow() {
   if (restoreFullscreen) win.setFullScreen(true);
   broadcast();
   void discoverProfiles();
+  updateService.consumeInstallResult();
+  updateService.scheduleAutoCheck();
   if (!flash.available) report(import_electron8.app.isPackaged ? "Flash \u7EC4\u4EF6\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u83B7\u53D6\u5B8C\u6574\u5E94\u7528" : "Flash \u7EC4\u4EF6\u5C1A\u672A\u51C6\u5907\uFF0C\u8BF7\u8FD0\u884C\u5F00\u53D1\u73AF\u5883\u51C6\u5907\u811A\u672C");
   games.lifecycle.on("changed", (context) => {
     if (context.state === "failed" || context.state === "crashed") log("GAME_" + context.state.toUpperCase());
@@ -6364,7 +6472,7 @@ else {
   });
   import_electron8.app.whenReady().then(createWindow).catch(() => {
     log("STARTUP_FAILED");
-    import_electron8.dialog.showErrorBox("Naruto OS \u542F\u52A8\u5931\u8D25", import_electron8.app.isPackaged ? "\u8BF7\u91CD\u65B0\u6253\u5F00\u5E94\u7528\uFF0C\u9519\u8BEF\u8BB0\u5F55\u4FDD\u5B58\u5728\u5E94\u7528\u6570\u636E\u76EE\u5F55\u4E2D\u3002" : "\u8BF7\u68C0\u67E5\u5F00\u53D1\u6784\u5EFA\u4E0E\u8FD0\u884C\u7EC4\u4EF6\uFF0C\u9519\u8BEF\u8BB0\u5F55\u4FDD\u5B58\u5728\u72EC\u7ACB\u6570\u636E\u76EE\u5F55\u4E2D\u3002");
+    import_electron8.dialog.showErrorBox("NARUTO Faber \u542F\u52A8\u5931\u8D25", import_electron8.app.isPackaged ? "\u8BF7\u91CD\u65B0\u6253\u5F00\u5E94\u7528\uFF0C\u9519\u8BEF\u8BB0\u5F55\u4FDD\u5B58\u5728\u5E94\u7528\u6570\u636E\u76EE\u5F55\u4E2D\u3002" : "\u8BF7\u68C0\u67E5\u5F00\u53D1\u6784\u5EFA\u4E0E\u8FD0\u884C\u7EC4\u4EF6\uFF0C\u9519\u8BEF\u8BB0\u5F55\u4FDD\u5B58\u5728\u72EC\u7ACB\u6570\u636E\u76EE\u5F55\u4E2D\u3002");
     import_electron8.app.exit(1);
   });
   import_electron8.app.on("window-all-closed", () => import_electron8.app.quit());

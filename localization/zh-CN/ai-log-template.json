@@ -1,0 +1,775 @@
+{
+  "schema": 1,
+  "locale": "zh-CN",
+  "module": "flash/ai/AILogTemplate.xml",
+  "entries": [
+    {
+      "key": "ai.template.1",
+      "sourceText": "abgeholt<span class='yellow'> Online paket </span>，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "已领取<span class='yellow'>在线礼包</span>，获得<span class='yellow'>%1</span>",
+      "context": "领取在线礼包",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.2",
+      "sourceText": "zurücksetzen<span class='yellow'>Ninja-Prüfung </span>",
+      "zhCN": "重置<span class='yellow'>忍者考试</span>",
+      "context": "重置忍者考试",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.3",
+      "sourceText": "Ninja-Prüfung bisLevel<span class='yellow'>%1</span>überfallen，schau im Fenster der Ninja-Prüfung nach, welche Objekte du erhalten hast",
+      "zhCN": "忍者考试已扫荡至<span class='yellow'>%1</span>级，请前往忍者考试界面查看获得的道具",
+      "context": "扫荡忍者考试",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.20004",
+      "sourceText": "Gruppen-Ninja-Prüfung bis Level <span class='yellow'>%1</span>überfallen， schau im Fenster der Gruppen-Ninja-Prüfung nach, welche Objekte du erhalten hast",
+      "zhCN": "组队忍者考试已扫荡至<span class='yellow'>%1</span>级，请前往组队忍者考试界面查看获得的道具",
+      "context": "扫荡组队忍者考试",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.4",
+      "sourceText": "Tagestrainingsauftrag<span class='yellow'>%1</span>abgeschlossen，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已完成日常锻炼任务<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>",
+      "context": "完成日常锻炼任务",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.5",
+      "sourceText": "Tagestrainingsauftrag<span class='yellow'>%1</span>sofort abgeschlossen，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已一键完成日常锻炼任务<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>",
+      "context": "一键完成日常锻炼任务",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.6",
+      "sourceText": "Kostenlos gezogen<span class='yellow'>%1</span>，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "免费抽取<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>",
+      "context": "免费抽奖",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.7",
+      "sourceText": "herausgefordert<span class='yellow'>Raum der Fülle</span>，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "已挑战<span class='yellow'>丰饶之间</span>，获得<span class='yellow'>%1</span>",
+      "context": "挑战丰饶之间",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.71",
+      "sourceText": "überfallen<span class='yellow'>%1</span>，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已扫荡<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>",
+      "context": "扫荡玩法",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.72",
+      "sourceText": "überfallen%1<span class='yellow'>%2</span>，du erhältst<span class='yellow'>%3</span>",
+      "zhCN": "已扫荡%1，获得<span class='yellow'>%2</span>，并额外获得<span class='yellow'>%3</span>",
+      "context": "扫荡并领取奖励",
+      "placeholders": ["%1", "%2", "%3"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.8",
+      "sourceText": "Automatisch beim<span class='yellow'>%1</span>，du erhältst<span class='yellow'>%2</span>，und verbrauchst<span class='yellow'>%3</span>",
+      "zhCN": "已自动在<span class='yellow'>%1</span>兑换，获得<span class='yellow'>%2</span>，消耗<span class='yellow'>%3</span>",
+      "context": "自动商店兑换",
+      "placeholders": ["%1", "%2", "%3"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.9",
+      "sourceText": "Automatisch beim Schwarzmarkthändler eingekauft，du，du erhältst<span class='yellow'>%1</span>，und verbrauchst<span class='yellow'>%2</span>",
+      "zhCN": "已自动在黑市购买，获得<span class='yellow'>%1</span>，消耗<span class='yellow'>%2</span>",
+      "context": "自动黑市购买",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.10",
+      "sourceText": "Gildenglücksrad gedreht，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "已转动组织转盘，获得<span class='yellow'>%1</span>",
+      "context": "组织转盘",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.11",
+      "sourceText": "annehmen<span class='yellow'>%1</span>Transportunterstützungsantrag von",
+      "zhCN": "已接受来自<span class='yellow'>%1</span>的押镖护送申请",
+      "context": "接受护送申请",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.12",
+      "sourceText": "Kupfermünzen an die Gilde gespendet<span class='yellow'>%1</span>，du erhältst<span class='yellow'>%2</span> Gildenbeitrag",
+      "zhCN": "已向组织捐献铜币<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>组织贡献",
+      "context": "组织捐献",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.13",
+      "sourceText": "<span class='yellow'>%1</span>Set Beschwörungs-Chakra der Gilde geopfert，du erhältst<span class='yellow'>%2</span>Kupfermünzen.",
+      "zhCN": "已为组织献祭<span class='yellow'>%1</span>套通灵兽查克拉，获得<span class='yellow'>%2</span>铜币",
+      "context": "组织通灵兽献祭",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.14",
+      "sourceText": "Alle Ninjas auf dem Hof gegrüßt",
+      "zhCN": "已向庭院中的全部忍者问好",
+      "context": "家园一键问好",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.15",
+      "sourceText": "<span class='yellow'>%1</span>zum Transportieren des，<span class='yellow'>%2</span>entsandt",
+      "zhCN": "已派遣<span class='yellow'>%1</span>押送<span class='yellow'>%2</span>",
+      "context": "派遣好友押送",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.151",
+      "sourceText": "<span class='yellow'>%1</span>zum Transportieren des<span class='yellow'>%2</span>entsandt，du erhältst<span class='yellow'>%3</span>",
+      "zhCN": "已派遣<span class='yellow'>%1</span>押送<span class='yellow'>%2</span>，获得<span class='yellow'>%3</span>",
+      "context": "派遣好友押送并获得奖励",
+      "placeholders": ["%1", "%2", "%3"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.152",
+      "sourceText": "Wunschbaum erfolgreich gewässert",
+      "zhCN": "许愿树浇水成功",
+      "context": "给许愿树浇水",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.153",
+      "sourceText": "Wunschbaum von <span class='yellow'>%1</span> erfolgreich gewässert",
+      "zhCN": "已为<span class='yellow'>%1</span>的许愿树浇水成功",
+      "context": "给好友许愿树浇水",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.154",
+      "sourceText": " Sofort-Wässern erfolgreich",
+      "zhCN": "一键浇水成功",
+      "context": "一键浇水",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.155",
+      "sourceText": "Erfolgreich gewünscht，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "许愿成功，获得<span class='yellow'>%1</span>",
+      "context": "许愿奖励",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.16",
+      "sourceText": "Du wurdest von<span class='yellow'>%1</span>auf einen Auftrag entsand，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "你被<span class='yellow'>%1</span>派遣执行任务，获得<span class='yellow'>%2</span>",
+      "context": "被好友派遣",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.17",
+      "sourceText": "Geschenke im Hof gekauft, du erhältst，du erhältst<span class='yellow'>%1</span>， und verbrauchst [<span class='yellow'>%2</span>",
+      "zhCN": "已购买庭院礼品，获得<span class='yellow'>%1</span>，消耗<span class='yellow'>%2</span>",
+      "context": "购买家园礼品",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.18",
+      "sourceText": " Es gibt gerade nichts zu tun, du begibst dich automatisch zur<span class='yellow'> heißen Quelle</span>",
+      "zhCN": "当前没有可执行事项，已自动前往<span class='yellow'>温泉</span>",
+      "context": "空闲时自动前往温泉",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.181",
+      "sourceText": "Freund <span class='yellow'>%1</span> eingeseift，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已为好友<span class='yellow'>%1</span>擦洗，获得<span class='yellow'>%2</span>",
+      "context": "好友温泉互动",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.19",
+      "sourceText": " Die Zeit der schnelleren Körperkraft-Regeneration in der heißen Quelle ist abgelaufen, du begibst dich automatisch nach Süd-Konoha",
+      "zhCN": "温泉加速恢复体力的时间已结束，已自动前往木叶村南",
+      "context": "温泉加速结束",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.20",
+      "sourceText": " Es gibt gerade nichts zu tun, du begibst dich automatisch nach Süd-Konoha",
+      "zhCN": "当前没有可执行事项，已自动前往木叶村南",
+      "context": "空闲时自动前往木叶村南",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.21",
+      "sourceText": "Automatisch beim Raum-Zeit-Wetthändler eingetauscht，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "已自动在时空间商店兑换，获得<span class='yellow'>%1</span>",
+      "context": "时空间商店兑换",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.22",
+      "sourceText": "Kostenlose Expedition<span class='yellow'>in der Geheimnisvollen Höhle</span>，du erhältst<span class='yellow'>%1</span>",
+      "zhCN": "已在<span class='yellow'>神秘洞穴</span>完成免费探索，获得<span class='yellow'>%1</span>",
+      "context": "神秘洞穴探索",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.23",
+      "sourceText": "领取<span class='yellow'>%1</span>，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "领取<span class='yellow'>%1</span>，获得<span class='yellow'>%2</span>",
+      "context": "特权活动领取",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.24",
+      "sourceText": "Erfolgreich einen Schatz hergestellt，du erhältst：<span class='yellow'>%1</span>",
+      "zhCN": "成功打造宝具，获得：<span class='yellow'>%1</span>",
+      "context": "宝具打造",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.25",
+      "sourceText": "Privilegien der Jo-Nin-Medaille genutzt und die Geschwindigkeit der Schatzherstellung 1-mal erhöht.",
+      "zhCN": "已使用上忍勋章特权，免费加速 1 次宝具打造",
+      "context": "上忍勋章加速宝具",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.26",
+      "sourceText": "<span class='yellow'>%1</span>-Aktivitätstruhe abgeholt，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已领取<span class='yellow'>%1</span>活跃度宝箱，获得<span class='yellow'>%2</span>",
+      "context": "活跃度宝箱",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.156",
+      "sourceText": "Automatisch in Mine <span class='yellow'>%1</span> eingesammelt，du erhältst<span class='yellow'>%2</span>",
+      "zhCN": "已在<span class='yellow'>%1</span>矿洞自动收取，获得<span class='yellow'>%2</span>",
+      "context": "矿洞自动收取",
+      "placeholders": ["%1", "%2"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.157",
+      "sourceText": "Abbau in Mine <span class='yellow'>%1</span>gestartet",
+      "zhCN": "已开始在<span class='yellow'>%1</span>矿洞挖矿",
+      "context": "开始挖矿",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.158",
+      "sourceText": "Mine <span class='yellow'>%1</span>auf Stufe<span class='yellow'>%2</span>erhöht，du erhältst<span class='yellow'>%3</span>",
+      "zhCN": "<span class='yellow'>%1</span>矿洞已升至<span class='yellow'>%2</span>级，获得<span class='yellow'>%3</span>",
+      "context": "矿洞升级",
+      "placeholders": ["%1", "%2", "%3"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.9000",
+      "sourceText": "%1",
+      "zhCN": "%1",
+      "context": "本地日志透传",
+      "placeholders": ["%1"],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.9001",
+      "sourceText": "Início do Modo Automático",
+      "zhCN": "自动托管已开始",
+      "context": "托管开始",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.template.9002",
+      "sourceText": "O Modo Automático terminou",
+      "zhCN": "自动托管已结束",
+      "context": "托管结束",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010001",
+      "sourceText": "Baú de Laços",
+      "zhCN": "羁绊宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010002",
+      "sourceText": "Baú do Selo",
+      "zhCN": "封印宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010003",
+      "sourceText": "Baú de Pain",
+      "zhCN": "佩恩宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010004",
+      "sourceText": "Baú de Invocações",
+      "zhCN": "通灵宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010005",
+      "sourceText": "Baú dos Cinco Kage",
+      "zhCN": "五影宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010006",
+      "sourceText": "Baú dos Jinchuuriki I ",
+      "zhCN": "人柱力宝箱 I",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010007",
+      "sourceText": "Baú dos Jinchuuriki II ",
+      "zhCN": "人柱力宝箱 II",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010008",
+      "sourceText": "Baú Limitado",
+      "zhCN": "限定宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010009",
+      "sourceText": "Baú das Reanimações I ",
+      "zhCN": "秽土转生宝箱 I",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010010",
+      "sourceText": "Baú da Descoberta I ",
+      "zhCN": "寻宝宝箱 I",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010011",
+      "sourceText": "Baú das Reanimações II ",
+      "zhCN": "秽土转生宝箱 II",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010012",
+      "sourceText": "Baú do País do Relâmpago",
+      "zhCN": "雷之国宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010013",
+      "sourceText": "Baú da Guerra Ninja",
+      "zhCN": "忍界大战宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.30010014",
+      "sourceText": "Baú de Pergaminhos de Habilidade",
+      "zhCN": "技能卷轴宝箱",
+      "context": "宝箱名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.40040001",
+      "sourceText": "Sala da Abundância",
+      "zhCN": "丰饶之间",
+      "context": "副本名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.40040002",
+      "sourceText": "Schatzkammer",
+      "zhCN": "宝藏之间",
+      "context": "副本名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.40040003",
+      "sourceText": "Fases Comuns",
+      "zhCN": "普通副本",
+      "context": "副本名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.40040004",
+      "sourceText": "Fases de Elite",
+      "zhCN": "精英副本",
+      "context": "副本名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001001",
+      "sourceText": "Loja da Luta pelo Pódio",
+      "zhCN": "排位战商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001002",
+      "sourceText": "Loja do Treino de Sobrevivência",
+      "zhCN": "生存演习商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001004",
+      "sourceText": "Loja da Guilda",
+      "zhCN": "组织商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001005",
+      "sourceText": "Loja de Invocações",
+      "zhCN": "通灵兽商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001008",
+      "sourceText": "Loja dos Bravos",
+      "zhCN": "勇气商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50001009",
+      "sourceText": "Loja da Dimensão Paralela",
+      "zhCN": "时空间商店",
+      "context": "商店名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002001",
+      "sourceText": "Pontos da Luta pelo Pódio",
+      "zhCN": "排位战积分",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002002",
+      "sourceText": "Pontos do Teste de Sobrevivência",
+      "zhCN": "生存演习积分",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002004",
+      "sourceText": "Medalhas da Guilda",
+      "zhCN": "组织徽章",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002005",
+      "sourceText": "Pontos de Invocação",
+      "zhCN": "通灵积分",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002008",
+      "sourceText": "Pontos dos Bravos",
+      "zhCN": "勇气积分",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.50002009",
+      "sourceText": "Pontos da Dimensão Paralela",
+      "zhCN": "时空间积分",
+      "context": "货币名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000001",
+      "sourceText": "Assassinar ninja patife da Folha",
+      "zhCN": "击杀木叶叛忍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000002",
+      "sourceText": "Capturar ninja patife da Folha",
+      "zhCN": "捕捉木叶叛忍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000003",
+      "sourceText": "Perseguir ninja patife da Folha",
+      "zhCN": "追击木叶叛忍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000004",
+      "sourceText": "Assassinar espião invasor",
+      "zhCN": "击杀入侵间谍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000005",
+      "sourceText": "Capturar espião invasor",
+      "zhCN": "捕捉入侵间谍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000006",
+      "sourceText": "Perseguir espião invasor",
+      "zhCN": "追击入侵间谍",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000007",
+      "sourceText": "Assassinar lobos furiosos",
+      "zhCN": "击杀狂暴狼",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000008",
+      "sourceText": "Capturar lobos furiosos",
+      "zhCN": "捕捉狂暴狼",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000009",
+      "sourceText": "Perseguir lobos furiosos",
+      "zhCN": "追击狂暴狼",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000010",
+      "sourceText": "Escoltar o construtor da ponte",
+      "zhCN": "护送桥梁专家",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000011",
+      "sourceText": "Proteger o construtor da ponte",
+      "zhCN": "保护桥梁专家",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000012",
+      "sourceText": "Escoltar o príncipe do país vizinho",
+      "zhCN": "护送邻国大名",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000013",
+      "sourceText": "Proteger o príncipe do país vizinho",
+      "zhCN": "保护邻国大名",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000014",
+      "sourceText": "Transportar itens valiosos",
+      "zhCN": "运送贵重物品",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000015",
+      "sourceText": "Transportar informações secretas",
+      "zhCN": "运送机密情报",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.70000016",
+      "sourceText": "Transportar correspondência importante",
+      "zhCN": "运送重要信件",
+      "context": "任务名称",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000041",
+      "sourceText": "Sorteio da Fortuna",
+      "zhCN": "幸运抽奖",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000042",
+      "sourceText": "Golpe de sorte no Sorteio da Fortuna",
+      "zhCN": "幸运抽奖中奖",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000051",
+      "sourceText": "Privilégios do Salão — Pacote de Login Diário ",
+      "zhCN": "福利厅特权 - 每日登录礼包",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000052",
+      "sourceText": "Privilégios do Salão — Pacote Semanal ",
+      "zhCN": "福利厅特权 - 每周礼包",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000061",
+      "sourceText": "Pacote do Launcher — Benefício 1",
+      "zhCN": "启动器礼包 - 福利 1",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000062",
+      "sourceText": "Pacote do Launcher — Benefício 2",
+      "zhCN": "启动器礼包 - 福利 2",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000063",
+      "sourceText": "Pacote do Launcher — Benefício 3",
+      "zhCN": "启动器礼包 - 福利 3",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000071",
+      "sourceText": "Privilégios TGP — Pacote de Login Diário ",
+      "zhCN": "TGP 特权 - 每日登录礼包",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    },
+    {
+      "key": "ai.enum.80000072",
+      "sourceText": "Privilégios TGP — Pacote Semanal ",
+      "zhCN": "TGP 特权 - 每周礼包",
+      "context": "特权礼包",
+      "placeholders": [],
+      "status": "translated"
+    }
+  ]
+}

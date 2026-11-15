@@ -67,26 +67,41 @@ function normalizePatchPath(value) {
   return raw;
 }
 
+function normalizeSha256(value) {
+  const digest = String(value == null ? "" : value).trim().toLowerCase();
+  return /^[a-f0-9]{64}$/.test(digest) ? digest : null;
+}
+
 function parsePatchManifest(raw) {
   if (!raw || typeof raw !== "object") return null;
   if (typeof raw.enabled !== "boolean" || typeof raw.version !== "number" || !Array.isArray(raw.patches)) return null;
+  const requireSha256 = raw.requireSha256 === true || raw.version >= 6;
   const patches = [];
   for (const item of raw.patches) {
     if (!item || typeof item !== "object") return null;
     if (typeof item.path !== "string" || typeof item.file !== "string") return null;
     const file = normalizePatchPath(item.file);
     if (!file) return null;
+    const sha256 = normalizeSha256(item.sha256);
+    if (requireSha256 && !sha256) return null;
+    const fallbackFile = typeof item.fallbackFile === "string" ? normalizePatchPath(item.fallbackFile) : null;
     patches.push({
       path: item.path,
       file,
-      ...(typeof item.sha256 === "string" ? { sha256: item.sha256 } : {}),
+      ...(sha256 ? { sha256 } : {}),
       ...(typeof item.mimeType === "string" ? { mimeType: item.mimeType } : {}),
+      ...(typeof item.strategy === "string" ? { strategy: item.strategy } : {}),
+      ...(typeof item.sourceUrl === "string" ? { sourceUrl: item.sourceUrl } : {}),
+      ...(typeof item.sourceVersion === "string" ? { sourceVersion: item.sourceVersion } : {}),
+      ...(fallbackFile ? { fallbackFile } : {}),
+      ...(typeof item.compatibility === "string" ? { compatibility: item.compatibility } : {}),
       ...(typeof item.note === "string" ? { note: item.note } : {})
     });
   }
   return {
     enabled: raw.enabled,
     version: raw.version,
+    requireSha256,
     ...(typeof raw.region === "string" ? { region: raw.region } : {}),
     ...(typeof raw.textRegion === "string" ? { textRegion: raw.textRegion } : {}),
     ...(Array.isArray(raw.hosts) ? { hosts: raw.hosts.filter(host => typeof host === "string") } : {}),
@@ -315,6 +330,7 @@ class PatchService {
     this.loaded = false;
     this.attached = new Map();
     this.attachedTargeted = new Map();
+    this.invalidPatches = new Map();
     this.logFile = "";
     this.metrics = null;
     this.targetedMetrics = null;
@@ -343,11 +359,14 @@ class PatchService {
   reload() {
     this.dir = this.resolveDir();
     this.manifest = null;
+    this.invalidPatches.clear();
     try {
       const raw = fs.readFileSync(path.join(this.dir, "patch-manifest.json"), "utf8").replace(/^\uFEFF/, "");
       this.manifest = parsePatchManifest(JSON.parse(raw));
-    } catch (_) {
+      if (!this.manifest) this.log("manifest-invalid fallback=network reason=parse-or-validation");
+    } catch (error) {
       this.manifest = null;
+      this.log(`manifest-invalid fallback=network error=${error?.message || String(error)}`);
     }
     this.loaded = true;
     this.log(`manifest=${this.manifest ? "loaded" : "missing"} enabled=${this.enabled} dir=${this.dir} exe=${process.execPath}`);
@@ -361,6 +380,27 @@ class PatchService {
   ensure() {
     if (!this.loaded) this.reload();
     return this.enabled ? this.manifest : null;
+  }
+
+  readPatch(entry) {
+    const previousFailure = this.invalidPatches.get(entry.path);
+    if (previousFailure) return null;
+    try {
+      const data = fs.readFileSync(path.join(this.dir, entry.file));
+      if (entry.sha256) {
+        const digest = createHash("sha256").update(data).digest("hex");
+        if (digest !== entry.sha256) {
+          this.invalidPatches.set(entry.path, "hash-mismatch");
+          this.log(`hash-mismatch fallback=network path=${entry.path} expected=${entry.sha256} actual=${digest}`);
+          return null;
+        }
+      }
+      return data;
+    } catch (error) {
+      this.invalidPatches.set(entry.path, "read-failed");
+      this.log(`read-failed fallback=network path=${entry.path} error=${error?.message || String(error)}`);
+      return null;
+    }
   }
 
   async attachTargeted(webContents, region) {
@@ -430,32 +470,25 @@ class PatchService {
         void debuggerApi.sendCommand("Fetch.continueRequest", { requestId }).catch(() => {});
         return;
       }
-      try {
-        const data = fs.readFileSync(path.join(this.dir, entry.file));
-        if (entry.sha256 && createHash("sha256").update(data).digest("hex") !== entry.sha256.toLowerCase()) {
-          this.targetedMetrics.errors += 1;
-          this.log(`targeted hash-mismatch ${entry.path}`);
-          void debuggerApi.sendCommand("Fetch.failRequest", { requestId, errorReason: "Failed" }).catch(() => {});
-          return;
-        }
-        this.log(`targeted hit ${entry.path}`);
-        this.targetedMetrics.hits += 1;
-        void debuggerApi.sendCommand("Fetch.fulfillRequest", {
-          requestId,
-          responseCode: 200,
-          responseHeaders: [
-            { name: "Content-Type", value: entry.mimeType || defaultMimeType(entry.file) },
-            { name: "Content-Length", value: String(data.length) },
-            { name: "Access-Control-Allow-Origin", value: "*" },
-            { name: "Cache-Control", value: "no-store" }
-          ],
-          body: data.toString("base64")
-        }).catch(() => {});
-      } catch (_) {
+      const data = this.readPatch(entry);
+      if (!data) {
         this.targetedMetrics.errors += 1;
-        this.log(`targeted read-failed ${entry.path}`);
-        void debuggerApi.sendCommand("Fetch.failRequest", { requestId, errorReason: "Failed" }).catch(() => {});
+        void debuggerApi.sendCommand("Fetch.continueRequest", { requestId }).catch(() => {});
+        return;
       }
+      this.log(`targeted hit ${entry.path}`);
+      this.targetedMetrics.hits += 1;
+      void debuggerApi.sendCommand("Fetch.fulfillRequest", {
+        requestId,
+        responseCode: 200,
+        responseHeaders: [
+          { name: "Content-Type", value: entry.mimeType || defaultMimeType(entry.file) },
+          { name: "Content-Length", value: String(data.length) },
+          { name: "Access-Control-Allow-Origin", value: "*" },
+          { name: "Cache-Control", value: "no-store" }
+        ],
+        body: data.toString("base64")
+      }).catch(() => {});
     };
     debuggerApi.on("message", onMessage);
     this.attachedTargeted.set(webContents, { debugger: debuggerApi, onMessage });
@@ -542,22 +575,11 @@ class PatchService {
       }
       const entry = matchPatch(manifest, request.url);
       if (entry) {
-        try {
-          const file = path.join(self.dir, entry.file);
-          const data = fs.readFileSync(file);
-          if (entry.sha256) {
-            const digest = createHash("sha256").update(data).digest("hex");
-            if (digest !== entry.sha256.toLowerCase()) {
-              self.log(`hash-mismatch ${entry.path}`);
-              done({ error: -2 }, "hit");
-              return;
-            }
-          }
+        const data = self.readPatch(entry);
+        if (data) {
           self.log(`hit ${entry.path}`);
           done({ mimeType: entry.mimeType || defaultMimeType(entry.file), data }, "hit");
           return;
-        } catch (_) {
-          self.log(`read-failed ${entry.path}`);
         }
       }
       if (!fs.existsSync(CACHE_OFF) && request.method === "GET") {

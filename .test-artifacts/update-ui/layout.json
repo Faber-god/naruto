@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "tabs": [],
+  "activeId": null,
+  "preferences": {
+    "muted": false,
+    "flash": "34",
+    "theme": "dark",
+    "titleBarColor": null,
+    "region": "br",
+    "lobbyBackground": null,
+    "lobbyMotion": true,
+    "updateAutoCheck": true
+  },
+  "update": {
+    "lastCheckedAt": 1794681662001,
+    "lastResult": "ready",
+    "lastVersion": "1.9.2",
+    "consecutiveFailures": 0,
+    "notifiedVersion": ""
+  },
+  "bounds": {
+    "x": 57,
+    "y": 0,
+    "width": 1291,
+    "height": 750
+  },
+  "maximized": false,
+  "fullscreen": false
+}

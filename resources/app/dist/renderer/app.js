@@ -58,6 +58,22 @@
   ];
   var $ = (id) => document.getElementById(id);
   var svgNS = "http://www.w3.org/2000/svg";
+  document.documentElement.dataset.platform = /Windows/i.test(navigator.userAgent) ? "windows" : "other";
+  var windowControlsBound = false;
+  function bindWindowControls() {
+    if (windowControlsBound) return;
+    const min = $("win-min"), max = $("win-max"), close = $("win-close");
+    if (!min || !max || !close || !window.naruto || typeof window.naruto.windowCommand !== "function") return;
+    windowControlsBound = true;
+    min.addEventListener("click", () => void window.naruto.windowCommand("minimize"));
+    max.addEventListener("click", () => void window.naruto.windowCommand("toggle-maximize"));
+    close.addEventListener("click", () => void window.naruto.windowCommand("close"));
+    const tabline = document.querySelector(".tabline");
+    if (tabline) tabline.addEventListener("dblclick", (event) => {
+      if (event.target.closest("button, .tab, input, select")) return;
+      void window.naruto.windowCommand("toggle-maximize");
+    });
+  }
   function darkTheme(state) {
     return state.preferences.theme === "dark" || state.preferences.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches;
   }
@@ -75,7 +91,8 @@
   function avatarColors(name, dark) {
     let hue = 0;
     for (const character of name) hue = (hue * 31 + character.codePointAt(0)) % 360;
-    return dark ? [`hsl(${hue},28%,30%)`, `hsl(${hue},45%,88%)`] : [`hsl(${hue},32%,88%)`, `hsl(${hue},35%,28%)`];
+    const warmHue = 350 + hue % 36;
+    return dark ? [`hsl(${warmHue},40%,27%)`, `hsl(38,72%,84%)`] : [`hsl(${warmHue},52%,88%)`, `hsl(352,50%,30%)`];
   }
   function profileNotes(profile) {
     const notes = [];
@@ -448,9 +465,8 @@
       const generation = ++this.artGeneration;
       if (this.artFrame) cancelAnimationFrame(this.artFrame);
       this.artFrame = 0;
-      const extension = region === "br" ? "png" : "webp";
       const artwork = new Image();
-      const source = `lobby-art-${region}.${extension}`;
+      const source = `theme-hero-${region}.jpg`;
       artwork.onload = () => {
         if (generation === this.artGeneration) this.installArtwork(region, artwork, source, generation);
       };
@@ -524,6 +540,13 @@
         if (!width || !height) return;
         const rootRect = this.root.getBoundingClientRect(), artRect = this.art.getBoundingClientRect();
         const art = { x: artRect.left - rootRect.left, y: artRect.top - rootRect.top, w: artRect.width, h: artRect.height };
+        if (artRect.width >= width - 1 && artRect.height >= height - 1) {
+          for (const canvas of [this.dots, this.lines]) {
+            const context = canvas.getContext("2d");
+            if (context) context.clearRect(0, 0, canvas.width, canvas.height);
+          }
+          return;
+        }
         const fx = art.x + this.focusPoint.x * art.w, fy = art.y + this.focusPoint.y * art.h;
         this.root.style.setProperty("--focus-x", `${fx}px`);
         this.root.style.setProperty("--focus-y", `${fy}px`);
@@ -634,6 +657,7 @@
   var secretTimers = /* @__PURE__ */ new Set();
   var credentialLoad = 0;
   var setupWizardOpen = false;
+  var updateActionBusy = false;
   var setupWizardShown = false;
   var setupWizardStep = 0;
   var setupWizardBusy = false;
@@ -911,7 +935,7 @@
     }
     const create = document.createElement("option");
     create.value = "__new__";
-    create.textContent = "Criar um novo perfil";
+    create.textContent = setupText(state, "createOption");
     select.append(create);
     const selected = profiles.some((profile) => profile.id === previous) ? previous :
       profiles.some((profile) => profile.id === state.selectedProfileId) ? state.selectedProfileId :
@@ -920,9 +944,9 @@
     select.value = selected;
     $2("setup-new-profile-fields").hidden = selected !== "__new__";
     $2("setup-profile-help").textContent = profiles.length
-      ? "Você pode usar um perfil existente ou criar outro sem apagar os dados atuais."
-      : state.profileDiscovery === "failed" ? (state.profileError || "Não foi possível verificar os perfis existentes.")
-      : "Nenhum perfil BR encontrado. Crie um perfil para continuar.";
+      ? setupText(state, "profileHelpExisting")
+      : state.profileDiscovery === "failed" ? (state.profileError || setupText(state, "profileHelpFailed"))
+      : setupText(state, "profileHelpNone");
   }
   function populateSetupAccounts() {
     const select = $2("setup-official-account");
@@ -930,7 +954,7 @@
     select.replaceChildren();
     const manual = document.createElement("option");
     manual.value = "__manual__";
-    manual.textContent = "Usar login normal (sem recuperação automática)";
+    manual.textContent = setupText(latest || {}, "manualOption");
     select.append(manual);
     for (const item of setupWizardAccounts) {
       const option = document.createElement("option");
@@ -944,26 +968,26 @@
     select.value = selected;
     $2("setup-server-id").disabled = selected === "__manual__";
     $2("setup-account-status").textContent = setupWizardAccountMessage || (setupWizardAccounts.length === 0
-      ? "Nenhuma conta oficial foi encontrada. Você ainda pode usar o login normal."
+      ? setupText(latest || {}, "accountNone")
       : setupWizardAccounts.length === 1
-        ? "Uma conta oficial foi encontrada neste computador."
-        : `${setupWizardAccounts.length} contas oficiais encontradas. Escolha a conta correta.`);
+        ? setupText(latest || {}, "accountOne")
+        : setupText(latest || {}, "accountMany", { count: setupWizardAccounts.length }));
   }
   async function refreshSetupAccounts() {
     const button = $2("setup-refresh-accounts");
     const status = $2("setup-account-status");
     button.disabled = true;
-    status.textContent = "Procurando contas oficiais…";
+    status.textContent = setupText(latest || {}, "searching");
     setupWizardAccountMessage = "";
     try {
       setupWizardAccounts = await api.recoveryAccounts("");
       setupWizardAccountMessage = setupWizardAccounts.length
-        ? `${setupWizardAccounts.length} conta(s) oficial(is) encontrada(s).`
-        : "Nenhuma conta encontrada. Entre no cliente oficial, feche-o completamente e tente atualizar. Você também pode continuar com login normal.";
+        ? setupText(latest || {}, "foundMany", { count: setupWizardAccounts.length })
+        : setupText(latest || {}, "notFound");
       populateSetupAccounts();
     } catch (error) {
       setupWizardAccounts = [];
-      setupWizardAccountMessage = error && error.message ? error.message : "Não foi possível verificar as contas oficiais.";
+      setupWizardAccountMessage = error && error.message ? error.message : setupText(latest || {}, "verifyFailed");
       populateSetupAccounts();
     } finally {
       button.disabled = false;
@@ -978,17 +1002,17 @@
     $2("setup-back").hidden = setupWizardStep === 0;
     $2("setup-next").hidden = setupWizardStep === 2;
     $2("setup-finish").hidden = setupWizardStep !== 2;
-    $2("setup-title").textContent = setupWizardStep === 0 ? "Configuração inicial" : setupWizardStep === 1 ? "Seu perfil de jogo" : "Conta oficial e servidor";
-    $2("setup-subtitle").textContent = setupWizardStep === 0 ? "Vamos preparar sua conta em poucos passos." : setupWizardStep === 1 ? "Escolha onde seus dados de jogo serão guardados." : "Vincule o cliente oficial ou use o login normal.";
+    $2("setup-title").textContent = setupWizardStep === 0 ? setupText(state, "title0") : setupWizardStep === 1 ? setupText(state, "title1") : setupText(state, "title2");
+    $2("setup-subtitle").textContent = setupWizardStep === 0 ? setupText(state, "subtitle0") : setupWizardStep === 1 ? setupText(state, "subtitle1") : setupText(state, "subtitle2");
     if (setupWizardStep === 0) {
       const system = state.system || {};
       $2("setup-system-status").textContent = system.platform === "win32" && system.architecture === "x64"
-        ? `Windows 64 bits · Electron ${system.electron || "11"}` : `${system.platform || "Sistema"} · ${system.architecture || "arquitetura"}`;
+        ? setupText(state, "systemWindows", { version: system.electron || "11" }) : setupText(state, "systemOther", { platform: system.platform || "", arch: system.architecture || "" });
       $2("setup-flash-icon").textContent = system.flashAvailable ? "✓" : "!";
       $2("setup-flash-icon").className = system.flashAvailable ? "setup-check-icon" : "setup-check-icon warning";
       $2("setup-flash-status").textContent = system.flashAvailable
-        ? `Flash ${system.flashVersion || "incluído"} encontrado. A renderização será confirmada ao abrir o jogo.`
-        : "O Flash não foi detectado agora. A configuração pode continuar, mas será necessário verificar o pacote do jogo.";
+        ? setupText(state, "flashFound", { version: system.flashVersion || "" })
+        : setupText(state, "flashMissing");
     }
     if (setupWizardStep === 1) populateSetupProfiles(state);
     $2("setup-wizard").hidden = !setupWizardOpen;
@@ -998,7 +1022,7 @@
     }
     $2("setup-server-id").disabled = setupWizardBusy || $2("setup-official-account").value === "__manual__";
     if (setupWizardOpen && state.profileDiscovery === "failed") {
-      $2("setup-profile-help").textContent = state.profileError || "A leitura dos perfis falhou. Você pode configurar depois e tentar novamente.";
+      $2("setup-profile-help").textContent = state.profileError || setupText(state, "profileHelpFailed");
       $2("setup-next").disabled = setupWizardStep === 1;
     } else {
       $2("setup-next").disabled = setupWizardBusy;
@@ -1026,14 +1050,14 @@
     const account = $2("setup-official-account").value;
     const serverText = $2("setup-server-id").value.trim();
     if (account !== "__manual__" && !/^[1-9]\d{0,4}$/.test(serverText)) {
-      setSetupError("Digite o número do servidor BR. Exemplo: se o jogo mostrar S810, digite 810.");
+      setSetupError(setupText(latest || {}, "errorServer"));
       return;
     }
     const profileChoice = $2("setup-profile-select").value || setupWizardProfileChoice;
     const isNew = profileChoice === "__new__";
     const profileName = $2("setup-profile-name").value.trim();
     if (isNew && !profileName) {
-      setSetupError("Digite um nome para identificar seu perfil.");
+      setSetupError(setupText(latest || {}, "errorName"));
       return;
     }
     setupWizardBusy = true;
@@ -1044,7 +1068,7 @@
       let profileId = profileChoice;
       if (isNew) {
         const created = await api.command({ type: "profile-create", name: profileName, serverNote: "" });
-        if (!created || !created.id) throw new Error("Não foi possível criar o perfil. Tente novamente.");
+        if (!created || !created.id) throw new Error(setupText(latest || {}, "errorCreate"));
         profileId = created.id;
       }
       await api.command({ type: "profile-select", id: profileId });
@@ -1058,11 +1082,11 @@
       setupWizardOpen = false;
       setupWizardBusy = false;
       setSetupError("");
-      toast(account === "__manual__" ? "Configuração concluída. Você pode entrar pelo login normal." : "Configuração concluída. Seu perfil BR está pronto.");
+      toast(account === "__manual__" ? setupText(latest || {}, "doneManual") : setupText(latest || {}, "doneRecovery"));
       if (latest) render(latest);
     } catch (error) {
       setupWizardBusy = false;
-      setSetupError(error && error.message ? error.message : "Não foi possível concluir a configuração. Tente novamente.");
+      setSetupError(error && error.message ? error.message : setupText(latest || {}, "errorFinish"));
       if (latest) syncSetupPage(latest);
     }
   }
@@ -1074,16 +1098,17 @@
       await api.command({ type: "setup-complete", mode: "later" });
       setupWizardOpen = false;
       setupWizardBusy = false;
-      toast("Tudo bem. Você poderá configurar a recuperação depois em Configurações → Login Profiles.");
+      toast(setupText(latest || {}, "deferred"));
       if (latest) render(latest);
     } catch (error) {
       setupWizardBusy = false;
-      setSetupError(error && error.message ? error.message : "Não foi possível salvar esta opção.");
+      setSetupError(error && error.message ? error.message : setupText(latest || {}, "errorSave"));
       if (latest) syncSetupPage(latest);
     }
   }
   function render(state) {
     latest = state;
+    applySetupStaticText(state);
     maybeOpenSetupWizard(state);
     syncSetupPage(state);
     document.documentElement.classList.toggle("on-lobby", !state.activeId && !state.settingsOpen);
@@ -1200,6 +1225,26 @@
     const flashChanged = state.preferences.flash !== state.flash.version.split(".")[0];
     $2("flash-detail").textContent = !state.flash.available ? "\u7EC4\u4EF6\u5C1A\u672A\u51C6\u5907" : flashChanged ? "\u4E0B\u6B21\u542F\u52A8\u751F\u6548" : "";
     $2("flash-detail").hidden = state.flash.available && !flashChanged;
+    $2("game-version-label").textContent = state.messages && state.messages.ui ? state.messages.ui.gameVersion : "";
+    $2("game-version-value").textContent = state.version ? `v${state.version}` : "";
+    renderUpdate(state);
+    bindWindowControls();
+    const uiMessages = state.messages && state.messages.ui ? state.messages.ui : {};
+    const winMin = $2("win-min"), winMax = $2("win-max"), winClose = $2("win-close");
+    if (winMin) {
+      winMin.title = uiMessages.minimize || "";
+      winMin.setAttribute("aria-label", winMin.title);
+    }
+    if (winMax) {
+      const maximized = !!state.windowMaximized;
+      winMax.title = maximized ? uiMessages.restore || "" : uiMessages.maximize || "";
+      winMax.setAttribute("aria-label", winMax.title);
+      winMax.dataset.maximized = String(maximized);
+    }
+    if (winClose) {
+      winClose.title = uiMessages.closeWindow || "";
+      winClose.setAttribute("aria-label", winClose.title);
+    }
     if (state.settingsOpen && !settingsWasOpen) {
       void loadCredentials();
       $2("close-settings").focus();
@@ -1212,6 +1257,144 @@
       if (!$2("dialog-backdrop").hidden) void closeDialog();
     }
     settingsWasOpen = state.settingsOpen;
+  }
+  function setupText(state, key, vars) {
+    const ui = state && state.messages && state.messages.ui && state.messages.ui.setup ? state.messages.ui.setup : {};
+    const template = typeof ui[key] === "string" ? ui[key] : key;
+    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) =>
+      Object.prototype.hasOwnProperty.call(vars || {}, name) ? String(vars[name]) : match
+    );
+  }
+  function applySetupStaticText(state) {
+    for (const element of document.querySelectorAll("[data-i18n]")) {
+      element.textContent = setupText(state, element.dataset.i18n);
+    }
+    for (const element of document.querySelectorAll("[data-i18n-placeholder]")) {
+      element.setAttribute("placeholder", setupText(state, element.dataset.i18nPlaceholder));
+    }
+  }
+  function updateText(state, key, vars) {
+    const ui = state && state.messages && state.messages.ui && state.messages.ui.update ? state.messages.ui.update : {};
+    const template = typeof ui[key] === "string" ? ui[key] : key;
+    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) =>
+      Object.prototype.hasOwnProperty.call(vars || {}, name) ? String(vars[name]) : match
+    );
+  }
+  function updateErrorText(state, code) {
+    const keys = {
+      network: "errorNetwork",
+      http_status: "errorHttpStatus",
+      manifest_invalid: "errorManifest",
+      schema: "errorSchema",
+      asset_mismatch: "errorAsset",
+      unsupported_version: "errorVersion",
+      size_exceeded: "errorSize",
+      hash_mismatch: "errorHash",
+      io: "errorIo",
+      disk_full: "errorDisk",
+      permission: "errorPermission",
+      spawn_failed: "errorSpawn",
+      install_failed: "errorInstall",
+      unsupported_layout: "errorLayout",
+      cancelled: "errorCancelled",
+      min_version: "minVersionBlocked"
+    };
+    return updateText(state, keys[code] || "error");
+  }
+  function renderUpdate(state) {
+    const panel = $2("update-section");
+    if (!panel) return;
+    const info = state.update || {};
+    const phase = info.phase || "idle";
+    const busy = ["checking", "downloading", "verifying", "installing"].includes(phase);
+    $2("update-heading").textContent = updateText(state, "sectionTitle");
+    $2("update-current").textContent = updateText(state, "currentVersion") + " v" + (info.currentVersion || state.version || "");
+    $2("update-auto-label").textContent = updateText(state, "autoCheck");
+    $2("update-auto-check").setAttribute("aria-checked", String(info.autoCheck !== false));
+    $2("update-status-label").textContent = updateText(state, "currentVersion");
+    const lastChecked = info.lastCheckedAt ? new Date(info.lastCheckedAt).toLocaleString() : "";
+    let status = updateText(state, "notChecked");
+    if (phase === "checking") status = updateText(state, "checking");
+    else if (phase === "up-to-date") status = updateText(state, "upToDate");
+    else if (phase === "available") status = updateText(state, "available", { version: info.latestVersion || "" });
+    else if (phase === "blocked") status = updateText(state, "minVersionBlocked", { version: info.minVersion || "" });
+    else if (phase === "downloading") status = updateText(state, "downloading");
+    else if (phase === "verifying") status = updateText(state, "verifying");
+    else if (phase === "ready") status = updateText(state, "ready");
+    else if (phase === "installing") status = updateText(state, "installing");
+    else if (phase === "error") status = updateText(state, "error");
+    else if (lastChecked) status = updateText(state, "lastChecked", { time: lastChecked });
+    $2("update-status").textContent = status;
+    const showLatest = !!info.latestVersion && ["available", "blocked", "downloading", "verifying", "ready"].includes(phase);
+    $2("update-latest-row").hidden = !showLatest;
+    $2("update-latest-label").textContent = updateText(state, "latestVersion");
+    $2("update-latest").textContent = showLatest ? "v" + info.latestVersion : "";
+    const progress = info.progress || { received: 0, total: 0, percent: 0 };
+    const showProgress = phase === "downloading" || phase === "verifying";
+    $2("update-progress-row").hidden = !showProgress;
+    $2("update-progress-label").textContent = updateText(state, "downloading");
+    $2("update-progress").value = Number(progress.percent) || 0;
+    $2("update-progress-text").textContent = progress.total
+      ? updateText(state, "progressPercent", { percent: progress.percent || 0 })
+      : updateText(state, "progressUnknown", { received: String(progress.received || 0) });
+    $2("update-last-checked").textContent = lastChecked ? updateText(state, "lastChecked", { time: lastChecked }) : "";
+    const notes = typeof info.notes === "string" ? info.notes.trim() : "";
+    $2("update-notes").hidden = !notes || !["available", "blocked", "downloading", "ready"].includes(phase);
+    $2("update-notes").textContent = notes;
+    let error = "";
+    if (phase === "error") {
+      error = updateErrorText(state, info.errorCode || "");
+      if (info.installResult && info.installResult.type === "failed") {
+        error = updateText(state, "installFailedDetail", { version: state.version || "", log: "update.log" });
+      }
+    }
+    $2("update-error").hidden = !error;
+    $2("update-error").textContent = error;
+    $2("update-check").textContent = updateText(state, "check");
+    $2("update-check").disabled = busy || updateActionBusy;
+    const action = $2("update-action");
+    action.disabled = updateActionBusy;
+    let actionText = "";
+    if (phase === "available") actionText = updateText(state, "download");
+    else if (phase === "ready") actionText = updateText(state, "install");
+    else if (phase === "error") actionText = updateText(state, "retry");
+    action.hidden = !actionText;
+    action.textContent = actionText;
+    const cancel = $2("update-cancel");
+    cancel.hidden = !(phase === "downloading" || phase === "verifying");
+    cancel.textContent = updateText(state, "cancel");
+    cancel.disabled = phase === "verifying" || updateActionBusy;
+    const page = $2("update-page");
+    page.hidden = !(phase === "error" || phase === "blocked");
+    page.textContent = updateText(state, "openPage");
+    page.disabled = updateActionBusy;
+    if (info.consecutiveFailures >= 3 && phase !== "error") {
+      $2("update-last-checked").textContent = updateText(state, "autoCheckFailing");
+    }
+  }
+  async function runUpdateAction(kind) {
+    if (updateActionBusy) return;
+    updateActionBusy = true;
+    if (latest && latest.update) renderUpdate(latest);
+    try {
+      if (kind === "check") await api.updateCheck();
+      else if (kind === "cancel") await api.updateCancel();
+      else if (kind === "page") await api.updateOpenPage();
+      else if (kind === "action") {
+        const info = latest && latest.update ? latest.update : {};
+        if (info.phase === "available") await api.updateDownload();
+        else if (info.phase === "ready") await api.updateInstall();
+        else if (info.phase === "error") {
+          if (info.latestVersion) await api.updateDownload();
+          else await api.updateCheck();
+        }
+      }
+    } catch (error) {
+      toast(error && error.message ? error.message : updateText(latest || {}, "error"));
+    } finally {
+      updateActionBusy = false;
+      if (latest) renderUpdate(latest);
+    }
   }
   async function loadCredentials() {
     const sequence = ++credentialLoad;
@@ -1585,6 +1768,13 @@
   $2("profile-retry").addEventListener("click", () => void command({ type: "profiles-retry" }));
   bind("settings", "settings");
   bind("close-settings", "settings");
+  $2("update-check").addEventListener("click", () => void runUpdateAction("check"));
+  $2("update-action").addEventListener("click", () => void runUpdateAction("action"));
+  $2("update-cancel").addEventListener("click", () => void runUpdateAction("cancel"));
+  $2("update-page").addEventListener("click", () => void runUpdateAction("page"));
+  $2("update-auto-check").addEventListener("click", () => {
+    if (latest) void command({ type: "update-auto-check", value: !latest.preferences.updateAutoCheck });
+  });
   bind("save-password", "save-password");
   bind("dismiss-password", "dismiss-prompt");
   $2("dialog-cancel").addEventListener("click", () => void closeDialog());
@@ -1715,11 +1905,11 @@
     if (setupWizardStep === 1) {
       const choice = $2("setup-profile-select").value;
       if (choice === "__new__" && !$2("setup-profile-name").value.trim()) {
-        setSetupError("Digite um nome para identificar seu perfil.");
+        setSetupError(setupText(latest || {}, "errorName"));
         return;
       }
       if (latest && latest.profileDiscovery !== "ready") {
-        setSetupError(latest.profileError || "Aguarde a verificação dos perfis ou configure depois.");
+        setSetupError(latest.profileError || setupText(latest || {}, "pleaseWaitProfiles"));
         return;
       }
       setupWizardProfileChoice = choice;
@@ -1735,6 +1925,12 @@
   });
   $2("setup-finish").addEventListener("click", () => void finishSetup());
   $2("setup-later").addEventListener("click", () => void deferSetup());
+  api.onUpdateProgress((payload) => {
+    if (!latest || !latest.update) return;
+    latest.update.progress = { received: payload.received, total: payload.total, percent: payload.percent };
+    latest.update.phase = payload.phase || latest.update.phase;
+    renderUpdate(latest);
+  });
   api.onState(render);
   void api.state().then(render).catch((error) => toast(error.message));
 })();

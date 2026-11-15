@@ -1,8 +1,10 @@
 {
   "enabled": false,
-  "version": 1,
+  "version": 6,
+  "requireSha256": true,
   "region": "br",
   "textRegion": "zh",
+  "note": "Canonical zh-CN patches are shipped in the executable-level patches directory. This fallback stays disabled to avoid loading incomplete stale resources.",
   "hosts": [
     "narutowebgame.com",
     "oasgames.com"

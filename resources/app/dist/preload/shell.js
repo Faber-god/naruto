@@ -11,6 +11,7 @@ async function invoke(channel, input) {
 var api = {
   state: () => invoke("shell:state"),
   command: (command) => invoke("shell:command", command),
+  windowCommand: (command) => invoke("shell:window-command", command),
   recoveryAccounts: (profileId) => invoke("shell:br-recovery-accounts", profileId ? { profileId } : {}),
   onState: (callback) => {
     const listener = (_event, state) => callback(state);
@@ -22,7 +23,18 @@ var api = {
   addCredential: (siteId, username, password, expected) => invoke("shell:credential-add", { siteId, username, password, expected }),
   reveal: (id) => invoke("shell:reveal", id),
   edit: (id, username, password) => invoke("shell:edit", { id, username, password }),
-  remove: (id) => invoke("shell:remove", id)
+  remove: (id) => invoke("shell:remove", id),
+  updateStatus: () => invoke("shell:update-status"),
+  updateCheck: () => invoke("shell:update-check"),
+  updateDownload: () => invoke("shell:update-download"),
+  updateCancel: () => invoke("shell:update-cancel"),
+  updateInstall: () => invoke("shell:update-install"),
+  updateOpenPage: () => invoke("shell:update-open-page"),
+  onUpdateProgress: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    import_electron.ipcRenderer.on("shell:update-progress", listener);
+    return () => import_electron.ipcRenderer.removeListener("shell:update-progress", listener);
+  }
 };
 import_electron.contextBridge.exposeInMainWorld("naruto", api);
 import_electron.ipcRenderer.on("shell:fullscreen", (_event, fullscreen) => document.documentElement.classList.toggle("fullscreen", fullscreen));
