@@ -46,6 +46,22 @@ function Fail([string]$Code) {
   exit 1
 }
 
+# Windows PowerShell 5.1 turns native stderr into terminating errors under
+# $ErrorActionPreference='Stop'; run gh with EAP=Continue and capture the exit code.
+function Invoke-Gh([string[]]$GhArgs) {
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  $output = $null
+  $code = 1
+  try {
+    $output = & gh @GhArgs 2>&1
+    $code = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previous
+  }
+  return @{ code = $code; output = $output }
+}
+
 try {
   $script:Messages = [IO.File]::ReadAllText($MessagesPath, [Text.Encoding]::UTF8) | ConvertFrom-Json
 } catch {
@@ -88,41 +104,53 @@ if ($DryRun) {
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Fail 'gh-missing' }
 
-& gh auth status 2>$null | Out-Null
-if ($LASTEXITCODE -ne 0) {
+$auth = Invoke-Gh @('auth', 'status')
+if ($auth.code -ne 0) {
   Write-Host (T 'releaseLoginMissing')
-  & gh auth login
-  & gh auth status 2>$null | Out-Null
-  if ($LASTEXITCODE -ne 0) { Fail 'login-missing' }
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    & gh auth login
+  } finally {
+    $ErrorActionPreference = $previous
+  }
+  $auth = Invoke-Gh @('auth', 'status')
+  if ($auth.code -ne 0) { Fail 'login-missing' }
 }
 
-$releaseJson = & gh release view $Tag --repo $Repo --json isDraft 2>$null
-if ($LASTEXITCODE -eq 0) {
-  $existing = $releaseJson | ConvertFrom-Json
-  if ($existing.isDraft -ne $true) { Fail ('exists-published:' + $Tag) }
+$view = Invoke-Gh @('release', 'view', $Tag, '--repo', $Repo, '--json', 'isDraft')
+if ($view.code -eq 0) {
+  $existing = $null
+  try {
+    $existing = ([string]($view.output | Where-Object { $_ -is [string] } | Select-Object -First 1)) | ConvertFrom-Json
+  } catch {
+    $existing = $null
+  }
+  if ($null -eq $existing -or $existing.isDraft -ne $true) { Fail ('exists-published:' + $Tag) }
   Write-Host (T 'releaseReuseDraft' @{ tag = $Tag })
 } else {
-  & gh release create $Tag --repo $Repo --draft --target $Branch --title $Tag --notes $Notes
-  if ($LASTEXITCODE -ne 0) { Fail ('create:' + $Tag) }
+  $create = Invoke-Gh @('release', 'create', $Tag, '--repo', $Repo, '--draft', '--target', $Branch, '--title', $Tag, '--notes', $Notes)
+  if ($create.code -ne 0) { Fail ('create:' + $Tag) }
   Write-Host (T 'releaseCreate' @{ tag = $Tag })
 }
 
 foreach ($file in @($UpdateZip, $UpdateJson, $FullZip)) {
   Write-Host (T 'releaseUpload' @{ file = [IO.Path]::GetFileName($file) })
 }
-& gh release upload $Tag --repo $Repo --clobber $UpdateZip $UpdateJson $FullZip
-if ($LASTEXITCODE -ne 0) { Fail 'upload' }
+$upload = Invoke-Gh @('release', 'upload', $Tag, '--repo', $Repo, '--clobber', $UpdateZip, $UpdateJson, $FullZip)
+if ($upload.code -ne 0) { Fail 'upload' }
 
-$assetNames = & gh release view $Tag --repo $Repo --json assets --jq '.assets[].name'
-if ($LASTEXITCODE -ne 0) { Fail 'asset-list' }
+$assetList = Invoke-Gh @('release', 'view', $Tag, '--repo', $Repo, '--json', 'assets', '--jq', '.assets[].name')
+if ($assetList.code -ne 0) { Fail 'asset-list' }
+$assetNames = @($assetList.output | Where-Object { $_ -is [string] })
 foreach ($expected in @([IO.Path]::GetFileName($UpdateZip), 'update.json', [IO.Path]::GetFileName($FullZip))) {
-  if (@($assetNames) -notcontains $expected) {
+  if ($assetNames -notcontains $expected) {
     Fail ('asset-missing:' + $expected)
   }
 }
 
-& gh release edit $Tag --repo $Repo --draft=false --latest
-if ($LASTEXITCODE -ne 0) { Fail 'publish' }
+$publish = Invoke-Gh @('release', 'edit', $Tag, '--repo', $Repo, '--draft=false', '--latest')
+if ($publish.code -ne 0) { Fail 'publish' }
 Write-Host (T 'releasePublish' @{ tag = $Tag })
 Write-Host (T 'releaseDone' @{ tag = $Tag })
 Write-Host (T 'releaseVerifyUrl' @{ url = ('https://github.com/' + $Repo + '/releases/latest/download/update.json') })
