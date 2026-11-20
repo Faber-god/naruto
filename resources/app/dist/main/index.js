@@ -5431,6 +5431,7 @@ function menuPlatform(platform) {
 }
 
 // src/main/index.ts
+var { MemoryService, validateMessages: validateMemoryMessages } = require("./memory-service");
 var root = import_path10.default.resolve(__dirname, "../..");
 var messagesConfig = null;
 function loadMessages() {
@@ -5440,6 +5441,7 @@ function loadMessages() {
     const parsed = JSON.parse(raw);
     const label = parsed && parsed.ui && parsed.ui.gameVersion;
     if (typeof label !== "string" || !label.trim()) throw new Error("messages.ui.gameVersion is missing");
+    validateMemoryMessages(parsed);
     return parsed;
   } catch (error) {
     throw new Error("messages-config-invalid: " + (error && error.message ? error.message : "unknown"));
@@ -5495,6 +5497,7 @@ var games;
 var navigation;
 var webLogin;
 var updateService = null;
+var memoryService = null;
 var settingsOpen = false;
 var modalOpen = false;
 var profilePickerOpen = false;
@@ -5786,6 +5789,7 @@ function state() {
     flash,
     version: import_electron8.app.getVersion(),
     update: updateService ? updateService.snapshot() : null,
+    memory: memoryService ? memoryService.snapshot() : null,
     messages: messagesConfig,
     notice,
     profiles: accountProfiles.list().map(({ id, region, slot, name, serverNote }) => {
@@ -6381,6 +6385,15 @@ async function createWindow() {
     }
   );
   games.muted = layout.preferences.muted;
+  memoryService = new MemoryService({
+    app: import_electron8.app,
+    messages: () => messagesConfig,
+    publish: payload => {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) win.webContents.send("shell:memory", payload);
+    },
+    log
+  });
+  win.once("closed", () => { if (memoryService) memoryService.stop(); });
   import_electron8.nativeTheme.on("updated", () => {
     if (win.isDestroyed()) return;
     win.setBackgroundColor(import_electron8.nativeTheme.shouldUseDarkColors ? "#202020" : "#fafafa");
@@ -6421,6 +6434,7 @@ async function createWindow() {
       savingSessions = true;
       saveLayout();
       shuttingDown = true;
+      if (memoryService) memoryService.stop();
       if (updateService) updateService.shutdown();
       pending.clear();
       candidates.clear();
@@ -6434,6 +6448,7 @@ async function createWindow() {
     }
   });
   await win.loadURL(shellURL);
+  memoryService.start();
   navigation.selectHome();
   if (restoreMaximized) win.maximize();
   if (process.env.NARUTO_TEST_HIDDEN !== "1") win.show();

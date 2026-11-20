@@ -113,7 +113,15 @@ svg { display: block; fill: none; stroke: currentColor; stroke-linecap: round; s
 .add { width: 26px; height: 28px; }
 .add svg { width: 15px; height: 15px; }
 .drag-space { flex: 1; min-width: 10px; }
-.tools { display: flex; align-items: center; gap: 5px; }
+.tools { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.memory-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; -webkit-app-region: no-drag; }
+#memory-status { min-width: 88px; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--bar-fg); white-space: nowrap; }
+:root[data-input-modality="keyboard"] #memory-status:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .status { max-width: 80px; }
+  .memory-controls { gap: 4px; }
+  #memory-status { min-width: 78px; }
+}
 .window-controls { display: none; align-items: center; gap: 2px; margin-left: 6px; -webkit-app-region: no-drag; }
 :root[data-platform="windows"] .window-controls { display: flex; }
 .win-button { width: 34px; height: 30px; padding: 0; border: 0; display: grid; place-items: center; border-radius: 6px; background: transparent; color: var(--bar-secondary); flex-shrink: 0; transition: background 120ms, color 120ms; }

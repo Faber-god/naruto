@@ -658,6 +658,7 @@
   var credentialLoad = 0;
   var setupWizardOpen = false;
   var updateActionBusy = false;
+  var memorySnapshot = null;
   var setupWizardShown = false;
   var setupWizardStep = 0;
   var setupWizardBusy = false;
@@ -1106,6 +1107,28 @@
       if (latest) syncSetupPage(latest);
     }
   }
+  function memoryText(state, key, values = {}) {
+    const template = state.messages && state.messages.ui && state.messages.ui.memory && state.messages.ui.memory[key];
+    if (typeof template !== "string" || !template.trim()) throw new Error("MEMORY_MESSAGE_MISSING:" + key);
+    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (_match, name) => {
+      if (!Object.prototype.hasOwnProperty.call(values, name)) throw new Error("MEMORY_PLACEHOLDER_MISSING:" + name);
+      return String(values[name]);
+    });
+  }
+  function renderMemory(state, info = state.memory) {
+    if (memorySnapshot && (!info || memorySnapshot.sampledAt > info.sampledAt)) info = memorySnapshot;
+    memorySnapshot = info;
+    const status = $2("memory-status");
+    const size = value => value === null ? memoryText(state, "unavailable") : memoryText(state, value >= 1048576 ? "sizeGiB" : "sizeMiB", { value: (value / (value >= 1048576 ? 1048576 : 1024)).toFixed(value >= 1048576 ? 2 : 0) });
+    if (info && info.status === "ok") {
+      status.textContent = memoryText(state, "summary", { size: size(info.workingSetKiB) });
+      status.title = memoryText(state, "detail", { workingSet: size(info.workingSetKiB), private: size(info.privateKiB), count: info.processCount });
+    } else {
+      status.textContent = memoryText(state, info && info.status === "unavailable" ? "unavailable" : "reading");
+      status.title = info && info.code ? memoryText(state, "partialDetail", { code: info.code }) : status.textContent;
+    }
+    status.setAttribute("aria-label", status.title);
+  }
   function render(state) {
     latest = state;
     applySetupStaticText(state);
@@ -1228,6 +1251,7 @@
     $2("game-version-label").textContent = state.messages && state.messages.ui ? state.messages.ui.gameVersion : "";
     $2("game-version-value").textContent = state.version ? `v${state.version}` : "";
     renderUpdate(state);
+    renderMemory(state);
     bindWindowControls();
     const uiMessages = state.messages && state.messages.ui ? state.messages.ui : {};
     const winMin = $2("win-min"), winMax = $2("win-max"), winClose = $2("win-close");
@@ -1925,6 +1949,11 @@
   });
   $2("setup-finish").addEventListener("click", () => void finishSetup());
   $2("setup-later").addEventListener("click", () => void deferSetup());
+  const unsubscribeMemory = api.onMemory((payload) => {
+    memorySnapshot = payload;
+    if (latest) renderMemory(latest, payload);
+  });
+  window.addEventListener("beforeunload", unsubscribeMemory, { once: true });
   api.onUpdateProgress((payload) => {
     if (!latest || !latest.update) return;
     latest.update.progress = { received: payload.received, total: payload.total, percent: payload.percent };

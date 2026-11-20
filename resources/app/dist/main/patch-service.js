@@ -6,6 +6,7 @@ const { app, net, session: electronSession } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { createHash } = require("crypto");
+const { Readable } = require("stream");
 
 const USER_DATA = app.getPath("userData");
 const HTTP2_ENABLED = process.env.NARUTO_HTTP2 === "1" || fs.existsSync(path.join(USER_DATA, "http2.flag"));
@@ -292,6 +293,19 @@ function cacheWrite(url, data, response, durationMs) {
   const paths = cachePaths(url);
   if (!paths) return;
   const temp = `${paths.file}.${process.pid}.${Date.now()}.tmp`;
+  fs.promises.mkdir(CACHE_DIR, { recursive: true })
+    .then(() => fs.promises.writeFile(temp, data))
+    .then(() => fs.promises.rename(temp, paths.file))
+    .then(() => recordCache(url, paths.file, data.length, response, durationMs))
+    .catch(async () => {
+      await fs.promises.unlink(temp).catch(() => {});
+    });
+  if (++cacheWrites % 200 === 0) setTimeout(() => void cachePrune(), 1500).unref?.();
+}
+
+function recordCache(url, file, size, response, durationMs) {
+  const paths = cachePaths(url);
+  if (!paths) return;
   const headers = response?.headers || {};
   const getHeader = name => {
     const key = Object.keys(headers).find(item => item.toLowerCase() === name);
@@ -299,28 +313,32 @@ function cacheWrite(url, data, response, durationMs) {
     return Array.isArray(value) ? value.join(", ") : String(value || "");
   };
   const ttl = /\.(swf|png|jpe?g|gif|mp3|ogg)$/i.test(paths.file) ? CACHE_TTL_ASSET : CACHE_TTL_DATA;
-  fs.promises.mkdir(CACHE_DIR, { recursive: true })
-    .then(() => fs.promises.writeFile(temp, data))
-    .then(() => fs.promises.rename(temp, paths.file))
-    .then(() => {
-      cacheIndex[paths.key] = {
-        ...paths.record,
-        file: path.basename(paths.file),
-        contentType: getHeader("content-type"),
-        contentEncoding: getHeader("content-encoding"),
-        etag: getHeader("etag"),
-        lastModified: getHeader("last-modified"),
-        responseTimeMs: Math.max(0, Number(durationMs) || 0),
-        expiresAt: Date.now() + ttl,
-        size: data.length,
-        lastAccess: Date.now()
-      };
-      scheduleCacheIndexWrite();
-    })
-    .catch(async () => {
-      await fs.promises.unlink(temp).catch(() => {});
-    });
-  if (++cacheWrites % 200 === 0) setTimeout(() => void cachePrune(), 1500).unref?.();
+  cacheIndex[paths.key] = {
+    ...paths.record,
+    file: path.basename(file),
+    contentType: getHeader("content-type"),
+    contentEncoding: getHeader("content-encoding"),
+    etag: getHeader("etag"),
+    lastModified: getHeader("last-modified"),
+    responseTimeMs: Math.max(0, Number(durationMs) || 0),
+    expiresAt: Date.now() + ttl,
+    size,
+    lastAccess: Date.now()
+  };
+  scheduleCacheIndexWrite();
+}
+
+function hashFile(file) {
+  const hash = createHash("sha256");
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  const fd = fs.openSync(file, "r");
+  try {
+    let read;
+    while ((read = fs.readSync(fd, buffer, 0, buffer.length, null)) > 0) hash.update(buffer.subarray(0, read));
+  } finally {
+    fs.closeSync(fd);
+  }
+  return hash.digest("hex");
 }
 
 class PatchService {
@@ -331,6 +349,7 @@ class PatchService {
     this.attached = new Map();
     this.attachedTargeted = new Map();
     this.invalidPatches = new Map();
+    this.patchVerified = new Map();
     this.logFile = "";
     this.metrics = null;
     this.targetedMetrics = null;
@@ -380,6 +399,41 @@ class PatchService {
   ensure() {
     if (!this.loaded) this.reload();
     return this.enabled ? this.manifest : null;
+  }
+
+  verifiedPatch(entry) {
+    if (this.invalidPatches.has(entry.path)) return null;
+    const file = path.join(this.dir, entry.file);
+    let stat;
+    try {
+      stat = fs.statSync(file);
+    } catch (error) {
+      this.invalidPatches.set(entry.path, "read-failed");
+      this.log(`read-failed fallback=network path=${entry.path} error=${error?.message || String(error)}`);
+      return null;
+    }
+    const cached = this.patchVerified.get(entry.path);
+    if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+      return cached.ok ? { file, size: stat.size } : null;
+    }
+    let ok = true;
+    if (entry.sha256) {
+      let digest;
+      try {
+        digest = hashFile(file);
+      } catch (error) {
+        this.invalidPatches.set(entry.path, "read-failed");
+        this.log(`read-failed fallback=network path=${entry.path} error=${error?.message || String(error)}`);
+        return null;
+      }
+      ok = digest === entry.sha256;
+      if (!ok) {
+        this.invalidPatches.set(entry.path, "hash-mismatch");
+        this.log(`hash-mismatch fallback=network path=${entry.path} expected=${entry.sha256} actual=${digest}`);
+      }
+    }
+    this.patchVerified.set(entry.path, { mtimeMs: stat.mtimeMs, size: stat.size, ok });
+    return ok ? { file, size: stat.size } : null;
   }
 
   readPatch(entry) {
@@ -545,24 +599,25 @@ class PatchService {
       errors: 0,
       httpVersions: {}
     };
-    const installed = gameSession.protocol.interceptBufferProtocol("https", function (request, callback) {
+    const installed = gameSession.protocol.interceptStreamProtocol("https", function (request, callback) {
       const t0 = Date.now();
-      let sent = 0;
-      const done = (payload, kind) => {
-        sent = payload && payload.data ? payload.data.length : 0;
-        if (kind === "hit") self.metrics.patchHits += 1;
-        else if (kind === "cache") self.metrics.cacheHits += 1;
-        else if (kind === "net") self.metrics.network += 1;
-        self.metrics.bytes += sent;
-        if (debug) {
+      const done = (payload, kind, sent) => {
+        const bytes = Number.isFinite(sent) ? sent : payload && payload.data && Number.isFinite(payload.data.length) ? payload.data.length : 0;
+        if (self.metrics) {
+          if (kind === "hit") self.metrics.patchHits += 1;
+          else if (kind === "cache") self.metrics.cacheHits += 1;
+          else if (kind === "net") self.metrics.network += 1;
+          self.metrics.bytes += bytes;
+        }
+        if (debug && self.stats) {
           const ms = Date.now() - t0;
           const st = self.stats;
           if (kind === "hit") { st.hitN += 1; st.hitMs += ms; }
           else if (kind === "cache") { st.hitN += 1; st.hitMs += ms; }
           else { st.netN += 1; st.netMs += ms; }
-          st.bytes += sent;
+          st.bytes += bytes;
           if (ms > 300 || kind !== "net") {
-            self.log(`timing ${kind} ${ms}ms ${sent}b ${request.url}`);
+            self.log(`timing ${kind} ${ms}ms ${bytes}b ${request.url}`);
           }
           if ((st.hitN + st.netN) % 50 === 0) {
             self.log(`stats hit=${st.hitN}/${st.hitMs}ms net=${st.netN}/${st.netMs}ms bytes=${st.bytes}`);
@@ -575,10 +630,10 @@ class PatchService {
       }
       const entry = matchPatch(manifest, request.url);
       if (entry) {
-        const data = self.readPatch(entry);
-        if (data) {
+        const verified = self.verifiedPatch(entry);
+        if (verified) {
           self.log(`hit ${entry.path}`);
-          done({ mimeType: entry.mimeType || defaultMimeType(entry.file), data }, "hit");
+          done({ mimeType: entry.mimeType || defaultMimeType(entry.file), headers: { "Content-Length": String(verified.size) }, data: fs.createReadStream(verified.file) }, "hit", verified.size);
           return;
         }
       }
@@ -586,18 +641,18 @@ class PatchService {
         const cached = cacheRead(request.url);
         if (cached) {
           try {
-            const data = fs.readFileSync(cached.file);
-            if (data.length) {
+            const size = fs.statSync(cached.file).size;
+            if (size > 0) {
               cached.lastAccess = Date.now();
               const key = cachePaths(request.url)?.key;
               if (key && cacheIndex[key]) {
                 cacheIndex[key].lastAccess = cached.lastAccess;
                 scheduleCacheIndexWrite();
               }
-              const headers = {};
+              const headers = { "Content-Length": String(size) };
               if (cached.contentType) headers["Content-Type"] = cached.contentType;
               if (cached.contentEncoding) headers["Content-Encoding"] = cached.contentEncoding;
-              done({ mimeType: cached.contentType || cached.mimeType || defaultMimeType(cached.file), headers, data }, "cache");
+              done({ mimeType: cached.contentType || cached.mimeType || defaultMimeType(cached.file), headers, data: fs.createReadStream(cached.file) }, "cache", size);
               return;
             }
           } catch (_) {
@@ -605,7 +660,14 @@ class PatchService {
           }
         }
       }
-      self.proxy(request, gameSession, proxy, payload => done(payload, "net"));
+      self.proxy(request, gameSession, proxy, payload => {
+        if (payload && payload.data) {
+          const data = payload.data;
+          done({ ...payload, data: Readable.from([data]) }, "net", data.length);
+        } else {
+          done(payload, "net", 0);
+        }
+      });
     });
     if (!installed) {
       this.log("intercept-failed");
@@ -651,6 +713,10 @@ class PatchService {
     const worker = async () => {
       while (queue.length) {
         const url = queue.shift();
+        if (matchPatch(this.manifest, url)) {
+          results.push({ url, status: "patched" });
+          continue;
+        }
         if (cacheRead(url)) {
           results.push({ url, status: "cache" });
           continue;
@@ -674,14 +740,29 @@ class PatchService {
   fetchToCache(session, url) {
     return new Promise(resolve => {
       const startedAt = Date.now();
+      const paths = cachePaths(url);
+      if (!paths) {
+        resolve({ url, status: "uncacheable" });
+        return;
+      }
       let settled = false;
       let timer;
       let client;
+      let out;
+      let temp;
+      let tooLarge = false;
+      const cleanupTemp = () => {
+        if (!temp) return;
+        try { fs.unlinkSync(temp); } catch (_) {}
+        temp = null;
+      };
       const done = result => {
         if (settled) return;
         settled = true;
         if (timer) clearTimeout(timer);
         try { client?.abort(); } catch (_) {}
+        if (out && !out.destroyed) out.destroy();
+        if (result.status !== "ok") cleanupTemp();
         resolve(result);
       };
       try {
@@ -693,23 +774,41 @@ class PatchService {
       timer = setTimeout(() => done({ url, status: "timeout" }), 8000);
       timer.unref?.();
       client.on("response", response => {
-        const chunks = [];
+        if (response.statusCode !== 200) {
+          response.resume();
+          return done({ url, status: `http-${response.statusCode}` });
+        }
+        try {
+          fs.mkdirSync(CACHE_DIR, { recursive: true });
+        } catch (_) {
+          return done({ url, status: "write-error" });
+        }
+        temp = `${paths.file}.${process.pid}.${Date.now()}.tmp`;
+        out = fs.createWriteStream(temp);
         let size = 0;
         response.on("data", chunk => {
-          const data = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-          size += data.length;
-          if (size <= CACHE_MAX_FILE) chunks.push(data);
+          size += chunk.length;
+          if (size > CACHE_MAX_FILE) {
+            tooLarge = true;
+            try { client.abort(); } catch (_) {}
+            out.destroy();
+          }
         });
-        response.on("end", () => {
-          if (size > CACHE_MAX_FILE) return done({ url, status: "too-large" });
-          if (response.statusCode !== 200) return done({ url, status: `http-${response.statusCode}` });
-          const body = Buffer.concat(chunks);
-          cacheWrite(url, body, response, Date.now() - startedAt);
+        response.pipe(out);
+        out.on("error", () => done({ url, status: "write-error" }));
+        out.on("finish", () => {
+          if (tooLarge) return done({ url, status: "too-large" });
+          try {
+            fs.renameSync(temp, paths.file);
+          } catch (_) {
+            return done({ url, status: "write-error" });
+          }
+          temp = null;
+          recordCache(url, paths.file, size, response, Date.now() - startedAt);
           done({ url, status: "ok" });
         });
-        response.on("error", () => done({ url, status: "stream-error" }));
       });
-      client.on("error", () => done({ url, status: "network-error" }));
+      client.on("error", () => done({ url, status: tooLarge ? "too-large" : "network-error" }));
       client.end();
     });
   }

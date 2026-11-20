@@ -58,6 +58,20 @@ try {
   const missing = { path: "/test/missing.bin", file: "missing.bin", sha256: entry.sha256 };
   assert.strictEqual(service.readPatch(missing), null);
   assert.match(fs.readFileSync(service.logFile, "utf8"), /read-failed fallback=network/);
+
+  service.invalidPatches.clear();
+  service.patchVerified.clear();
+  fs.writeFileSync(absolute, "valid");
+  const verified = service.verifiedPatch(entry);
+  assert.strictEqual(verified.size, 5);
+  fs.writeFileSync(absolute, "valid");
+  assert.strictEqual(service.verifiedPatch(entry).size, 5);
+  fs.writeFileSync(absolute, "corrupt");
+  assert.strictEqual(service.verifiedPatch(entry), null);
+  assert.strictEqual(service.invalidPatches.get("/test/good.bin"), "hash-mismatch");
+  const noHash = { path: "/test/nohash.bin", file: "nohash.bin" };
+  fs.writeFileSync(path.join(temp, "nohash.bin"), "any");
+  assert.strictEqual(service.verifiedPatch(noHash).size, 3);
   process.stdout.write("Patch fallback tests OK\n");
 } finally {
   Module._load = originalLoad;

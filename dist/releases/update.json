@@ -1,12 +1,12 @@
 {
     "schema":  1,
-    "version":  "1.9.1",
+    "version":  "1.9.2",
     "minVersion":  "1.9.0",
-    "assetName":  "Naruto-Windows-v1.9.1-update.zip",
-    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.1/Naruto-Windows-v1.9.1-update.zip",
-    "size":  36761430,
-    "sha256":  "643aac59c04e70091b9cccd266a4f06a4594c2063a7e2f5cea951686ebd17e86",
-    "notes":  "v1.9.1 adds automatic update checks, safe incremental installs and Chinese setup wizard.",
-    "publishedAt":  "2026-11-14T18:45:50.0069460Z",
+    "assetName":  "Naruto-Windows-v1.9.2-update.zip",
+    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.2/Naruto-Windows-v1.9.2-update.zip",
+    "size":  37108130,
+    "sha256":  "56ed13b9d9b56fa846c479b242015f85851e52b97581701b50520425482c74a1",
+    "notes":  "v1.9.2 adds in-client memory usage display, streaming patch downloads with hash verification, and the 810021 activity patch batch.",
+    "publishedAt":  "2026-11-20T15:39:19.6706581Z",
     "patchesIncluded":  true
 }

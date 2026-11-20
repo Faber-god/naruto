@@ -5,6 +5,15 @@
     "maximize": "最大化",
     "restore": "还原",
     "closeWindow": "关闭",
+    "memory": {
+      "reading": "内存：读取中",
+      "unavailable": "内存：不可用",
+      "summary": "内存 ≈ {size}",
+      "detail": "客户端进程工作集合计约 {workingSet}；私有提交 {private}；共 {count} 个进程。工作集可能重复计算共享页面；私有提交不是常驻物理内存或显存。每 5 秒更新。",
+      "partialDetail": "无法完整读取客户端进程内存（{code}），未使用零值代替。",
+      "sizeMiB": "{value} MiB",
+      "sizeGiB": "{value} GiB"
+    },
     "update": {
       "sectionTitle": "应用更新",
       "autoCheck": "启动时自动检查更新",
@@ -125,6 +134,9 @@
     }
   },
   "logs": {
+    "memory": {
+      "sampleFailed": "memory.sample.failed code={code}"
+    },
     "update": {
       "configInvalid": "update.config.invalid detail={detail}",
       "checkStart": "update.check.start current={current} manual={manual}",

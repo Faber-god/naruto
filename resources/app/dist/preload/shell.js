@@ -11,6 +11,11 @@ async function invoke(channel, input) {
 var api = {
   state: () => invoke("shell:state"),
   command: (command) => invoke("shell:command", command),
+  onMemory: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    import_electron.ipcRenderer.on("shell:memory", listener);
+    return () => import_electron.ipcRenderer.removeListener("shell:memory", listener);
+  },
   windowCommand: (command) => invoke("shell:window-command", command),
   recoveryAccounts: (profileId) => invoke("shell:br-recovery-accounts", profileId ? { profileId } : {}),
   onState: (callback) => {

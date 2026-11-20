@@ -1,9 +1,9 @@
 {
-  "version": "1.9.1",
-  "builtAt": "2026-11-15T00:00:00+08:00",
+  "version": "1.9.2",
+  "builtAt": "2026-11-20T23:36:47+08:00",
   "electron": "11.5.0",
   "platform": "win32",
   "architecture": "x64",
-  "notes": "v1.9.1 adds GitHub Releases update checks, signed-hash downloads and rollback-safe incremental installs",
+  "notes": "v1.9.2 adds in-client memory usage display, streaming patch downloads with hash verification, and the 810021 activity patch batch",
   "patchedFrom": "1.9.0"
 }

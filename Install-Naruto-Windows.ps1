@@ -1,8 +1,8 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $Host.UI.RawUI.WindowTitle = 'NARUTO Faber 安装程序'
 $Source = $PSScriptRoot
 $Exe = Join-Path $Source 'Naruto-Windows.exe'
-$Version = '1.9.1'
+$Version = '1.9.2'
 $DefaultInstall = Join-Path $env:LOCALAPPDATA 'Programs\Naruto-Windows'
 $Log = Join-Path $env:TEMP 'Naruto-Windows-Install.log'
 
@@ -13,7 +13,7 @@ try {
   Write-Host ''
   Write-Host '========================================='
   Write-Host '          NARUTO Faber 安装程序' -ForegroundColor White
-  Write-Host '                   v1.9.1' -ForegroundColor DarkGray
+  Write-Host '                   v1.9.2' -ForegroundColor DarkGray
   Write-Host '========================================='
   if (-not (Test-Path -LiteralPath $Exe -PathType Leaf)) { Fail '未找到 Naruto-Windows.exe。请先完整解压 ZIP，再运行安装程序。' }
   if (-not [Environment]::Is64BitOperatingSystem) { Fail '此版本需要 64 位 Windows。' }
