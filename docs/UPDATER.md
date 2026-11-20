@@ -67,7 +67,29 @@ build-info.json
 
 ## 4. 发布到 GitHub Releases
 
-建议先建草稿，上传完两个资产再发布为 latest：
+### 一键发布（推荐）
+
+生成更新包和完整包之后，在仓库根目录运行：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-release.ps1 `
+  -Version 1.9.2 `
+  -Notes "更新说明"
+```
+
+脚本会自动完成：
+
+1. 校验 `update.json` 与增量包的版本、大小、SHA-256
+2. 检查 `gh` 登录状态，未登录时自动进入 `gh auth login`
+3. 创建草稿 Release（已存在草稿则复用，已正式发布则终止）
+4. 上传 `update.zip`、`update.json`、`full.zip` 三个附件并逐项校验
+5. 发布为 latest 并输出 `releases/latest/download/update.json` 验证地址
+
+加 `-DryRun` 只做文件与清单校验，不联网。
+
+### 手动步骤
+
+先建草稿，上传完资产再发布为 latest：
 
 ```bash
 gh release create v1.9.2 --repo Faber-god/naruto --draft --title "v1.9.2" --notes-file NOTES.md

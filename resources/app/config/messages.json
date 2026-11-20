@@ -180,7 +180,26 @@
       "buildManifest": "update.build.manifest path={path} sha256={sha256}",
       "buildDryRun": "update.build.dry-run ok version={version}",
       "buildDone": "update.build.done version={version}",
-      "buildFailed": "update.build.failed code={code}"
+      "buildFailed": "update.build.failed code={code}",
+      "releaseStart": "update.release.start version={version} tag={tag}",
+      "releaseDryRun": "update.release.dry-run ok version={version} tag={tag}",
+      "releaseGhMissing": "update.release.gh-missing",
+      "releaseLoginMissing": "update.release.login-missing",
+      "releaseLoginOk": "update.release.login-ok user={user}",
+      "releaseFileMissing": "update.release.file-missing file={file}",
+      "releaseManifestInvalid": "update.release.manifest-invalid detail={detail}",
+      "releaseVersionMismatch": "update.release.version-mismatch manifest={manifest} expected={expected}",
+      "releaseHashMismatch": "update.release.hash-mismatch expected={expected} actual={actual}",
+      "releaseExistingPublished": "update.release.exists-published tag={tag}",
+      "releaseExistingDraft": "update.release.exists-draft tag={tag}",
+      "releaseCreate": "update.release.create tag={tag}",
+      "releaseReuseDraft": "update.release.reuse-draft tag={tag}",
+      "releaseUpload": "update.release.upload file={file}",
+      "releaseAssetMissing": "update.release.asset-missing asset={asset}",
+      "releasePublish": "update.release.publish tag={tag}",
+      "releaseDone": "update.release.done tag={tag}",
+      "releaseVerifyUrl": "update.release.verify url={url}",
+      "releaseFailed": "update.release.failed code={code}"
     }
   }
 }
