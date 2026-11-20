@@ -186,6 +186,7 @@
       "releaseGhMissing": "update.release.gh-missing",
       "releaseLoginMissing": "update.release.login-missing",
       "releaseLoginOk": "update.release.login-ok user={user}",
+      "releaseProxy": "update.release.proxy proxy={proxy}",
       "releaseFileMissing": "update.release.file-missing file={file}",
       "releaseManifestInvalid": "update.release.manifest-invalid detail={detail}",
       "releaseVersionMismatch": "update.release.version-mismatch manifest={manifest} expected={expected}",

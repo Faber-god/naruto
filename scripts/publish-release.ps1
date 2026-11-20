@@ -6,6 +6,7 @@ param(
   [string]$Notes = '',
   [string]$UpdateZip = '',
   [string]$FullZip = '',
+  [string]$Proxy = '',
   [switch]$DryRun
 )
 
@@ -103,6 +104,27 @@ if ($DryRun) {
 }
 
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Fail 'gh-missing' }
+
+if ([string]::IsNullOrWhiteSpace($Proxy) -and $Proxy -ne 'none') {
+  foreach ($port in @(7897, 7890, 10809, 1080)) {
+    $probe = New-Object System.Net.Sockets.TcpClient
+    try {
+      $pending = $probe.BeginConnect('127.0.0.1', $port, $null, $null)
+      if ($pending.AsyncWaitHandle.WaitOne(300) -and $probe.Connected) {
+        $Proxy = 'http://127.0.0.1:' + $port
+        break
+      }
+    } catch {
+    } finally {
+      $probe.Close()
+    }
+  }
+}
+if (-not [string]::IsNullOrWhiteSpace($Proxy) -and $Proxy -ne 'none') {
+  $env:HTTPS_PROXY = $Proxy
+  $env:HTTP_PROXY = $Proxy
+  Write-Host (T 'releaseProxy' @{ proxy = $Proxy })
+}
 
 $auth = Invoke-Gh @('auth', 'status')
 if ($auth.code -ne 0) {
