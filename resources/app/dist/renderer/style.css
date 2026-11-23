@@ -322,3 +322,28 @@ button.small { padding: 3px 10px; }
 .update-notes { margin: 0; padding: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .update-error { margin-top: 8px; color: var(--accent-red); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .update-error[hidden], .update-notes[hidden] { display: none; }
+.speed-button { min-width: 46px; height: 28px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; cursor: pointer; }
+.speed-button:hover { background: var(--hover); }
+.speed-button[data-active="true"] { border-color: var(--accent); color: var(--accent); }
+.speed-control { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+#speed-rate { flex: 1; min-width: 120px; accent-color: var(--accent); }
+.speed-value { min-width: 42px; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; }
+.speed-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.speed-presets button { padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 11px; cursor: pointer; }
+.speed-presets button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.speed-hint { display: block; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.speed-menu { position: fixed; z-index: 12; width: 232px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+.speed-menu[hidden] { display: none; }
+.speed-menu-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 8px; color: var(--muted); font-size: 12px; }
+.speed-menu-head .speed-value { color: var(--text); font-weight: 600; }
+.speed-menu-item { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.speed-menu-item:hover { background: var(--hover); }
+.speed-menu-item[aria-pressed="true"] { color: var(--accent); background: var(--selected); }
+.speed-menu-step { display: flex; gap: 6px; padding: 6px 4px; }
+.speed-step { flex: 1; padding: 6px 0; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.speed-step:hover:not(:disabled) { background: var(--hover); }
+.speed-step:disabled { opacity: .45; cursor: default; }
+.speed-menu-custom { display: flex; gap: 6px; margin: 4px 0; padding: 8px 4px 4px; border-top: 1px solid var(--line); }
+.speed-menu-custom input { flex: 1; min-width: 0; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--control); color: var(--text); font: inherit; font-size: 12px; }
+.speed-menu-help { justify-content: flex-start; color: var(--muted); }
+.speed-help-body { margin: 0 0 18px; color: var(--muted); font-size: 12px; line-height: 1.7; white-space: pre-wrap; }

@@ -1,7 +1,7 @@
 {
   "name": "naruto-os",
   "productName": "Naruto-Windows",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "main": "dist/main/index.js",
   "private": true
 }

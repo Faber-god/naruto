@@ -670,7 +670,7 @@
   function toast(message) {
     $2("status-text").textContent = message;
     $2("status-text").parentElement.hidden = false;
-    if ((latest == null ? void 0 : latest.settingsOpen) || !$2("dialog-backdrop").hidden) {
+    if ((latest == null ? void 0 : latest.settingsOpen) || !$2("dialog-backdrop").hidden || ($2("speed-menu") && !$2("speed-menu").hidden)) {
       $2("toast").textContent = message;
       $2("toast").hidden = false;
     }
@@ -1244,6 +1244,7 @@
     $2("settings-panel").hidden = !state.settingsOpen;
     lobby.render(state);
     renderLobbyPreferences(state);
+    renderSpeed(state);
     $2("flash-select").value = state.preferences.flash;
     const flashChanged = state.preferences.flash !== state.flash.version.split(".")[0];
     $2("flash-detail").textContent = !state.flash.available ? "\u7EC4\u4EF6\u5C1A\u672A\u51C6\u5907" : flashChanged ? "\u4E0B\u6B21\u542F\u52A8\u751F\u6548" : "";
@@ -1281,6 +1282,69 @@
       if (!$2("dialog-backdrop").hidden) void closeDialog();
     }
     settingsWasOpen = state.settingsOpen;
+  }
+  function speedText(state, key, vars) {
+    const ui = state && state.messages && state.messages.ui && state.messages.ui.speed ? state.messages.ui.speed : {};
+    const template = typeof ui[key] === "string" ? ui[key] : key;
+    return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) =>
+      Object.prototype.hasOwnProperty.call(vars || {}, name) ? String(vars[name]) : match
+    );
+  }
+  function renderSpeed(state) {
+    const raw = Number(state.preferences && state.preferences.speedRate);
+    const rate = Number.isFinite(raw) && raw > 1 ? Math.min(3, Math.round(raw * 10) / 10) : 1;
+    const label = speedText(state, "value", { value: rate.toFixed(1) });
+    const slider = $2("speed-rate");
+    const value = $2("speed-value");
+    const toolbar = $2("speed");
+    if (slider && document.activeElement !== slider) slider.value = String(rate);
+    if (value) value.textContent = label;
+    if (toolbar) {
+      toolbar.textContent = label;
+      toolbar.title = speedText(state, "toolbar");
+      toolbar.setAttribute("aria-label", toolbar.title);
+      toolbar.dataset.active = String(rate > 1);
+      toolbar.disabled = state.speedAvailable === false;
+    }
+    const rowLabel = $2("speed-label");
+    if (rowLabel) rowLabel.textContent = speedText(state, "sectionTitle");
+    const hint = $2("speed-hint");
+    if (hint) hint.textContent = speedText(state, state.speedAvailable === false ? "unavailable" : "hint");
+    const menuTitle = $2("speed-menu-title");
+    if (menuTitle) menuTitle.textContent = speedText(state, "menuTitle");
+    const menuCurrent = $2("speed-menu-current");
+    if (menuCurrent) menuCurrent.textContent = label;
+    const custom = $2("speed-custom");
+    if (custom) {
+      if (document.activeElement !== custom) custom.value = rate.toFixed(1);
+      custom.placeholder = speedText(state, "customPlaceholder");
+      custom.title = speedText(state, "custom");
+    }
+    const apply = $2("speed-apply");
+    if (apply) apply.textContent = speedText(state, "apply");
+    const down = $2("speed-down");
+    if (down) {
+      down.textContent = speedText(state, "decrease");
+      down.disabled = rate <= 1;
+    }
+    const up = $2("speed-up");
+    if (up) {
+      up.textContent = speedText(state, "increase");
+      up.disabled = rate >= 3;
+    }
+    const helpOpen = $2("speed-help-open");
+    if (helpOpen) helpOpen.textContent = speedText(state, "help");
+    const helpTitle = $2("speed-help-title");
+    if (helpTitle) helpTitle.textContent = speedText(state, "helpTitle");
+    const helpBody = $2("speed-help-body");
+    if (helpBody) helpBody.textContent = speedText(state, "helpBody");
+    const helpClose = $2("speed-help-close");
+    if (helpClose) helpClose.textContent = speedText(state, "close");
+    for (const preset of document.querySelectorAll("[data-speed-preset]")) {
+      const presetRate = Number(preset.dataset.speedPreset);
+      preset.textContent = presetRate === 1 ? speedText(state, "original") : speedText(state, "preset", { value: presetRate });
+      preset.setAttribute("aria-pressed", String(presetRate === rate));
+    }
   }
   function setupText(state, key, vars) {
     const ui = state && state.messages && state.messages.ui && state.messages.ui.setup ? state.messages.ui.setup : {};
@@ -1792,6 +1856,133 @@
   $2("profile-retry").addEventListener("click", () => void command({ type: "profiles-retry" }));
   bind("settings", "settings");
   bind("close-settings", "settings");
+  var speedMenu = $2("speed-menu");
+  var speedButton = $2("speed");
+  var speedHelpBackdrop = $2("speed-help-backdrop");
+  function currentSpeed() {
+    const raw = latest ? Number(latest.preferences && latest.preferences.speedRate) : 1;
+    return Number.isFinite(raw) && raw > 1 ? Math.min(3, Math.round(raw * 10) / 10) : 1;
+  }
+  function speedMenuOpen() {
+    return !!speedMenu && !speedMenu.hidden;
+  }
+  function otherOverlayOpen() {
+    const dialog = $2("dialog-backdrop");
+    const picker = $2("profile-picker-backdrop");
+    return !!(speedHelpBackdrop && !speedHelpBackdrop.hidden) ||
+      !!(dialog && !dialog.hidden) ||
+      !!(picker && !picker.hidden);
+  }
+  function releaseOverlay() {
+    if (!otherOverlayOpen()) void command({ type: "overlay", shown: false });
+  }
+  function closeSpeedMenu(releaseOverlayToo = true) {
+    if (!speedMenu) return;
+    speedMenu.hidden = true;
+    if (speedButton) speedButton.setAttribute("aria-expanded", "false");
+    if (releaseOverlayToo) releaseOverlay();
+  }
+  function openSpeedMenu() {
+    if (!speedMenu || !speedButton) return;
+    if (speedHelpBackdrop && !speedHelpBackdrop.hidden) return;
+    const rect = speedButton.getBoundingClientRect();
+    const width = 232;
+    speedMenu.style.top = (rect.bottom + 6) + "px";
+    speedMenu.style.left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)) + "px";
+    speedMenu.hidden = false;
+    speedButton.setAttribute("aria-expanded", "true");
+    const custom = $2("speed-custom");
+    if (custom) custom.value = currentSpeed().toFixed(1);
+    void command({ type: "overlay", shown: true });
+  }
+  function applySpeed(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 1 || number > 3) {
+      if (latest) toast(speedText(latest, "invalid"));
+      return false;
+    }
+    closeSpeedMenu();
+    void command({ type: "speed", value: Math.round(number * 10) / 10 });
+    return true;
+  }
+  function openSpeedHelp() {
+    if (!speedHelpBackdrop) return;
+    closeSpeedMenu(false);
+    speedHelpBackdrop.hidden = false;
+    const close = $2("speed-help-close");
+    if (close) close.focus();
+    void command({ type: "overlay", shown: true });
+  }
+  function closeSpeedHelp() {
+    if (!speedHelpBackdrop || speedHelpBackdrop.hidden) return;
+    speedHelpBackdrop.hidden = true;
+    releaseOverlay();
+  }
+  var speedSlider = $2("speed-rate");
+  if (speedSlider) {
+    var speedTimer = 0;
+    speedSlider.addEventListener("input", () => {
+      const value = Number(speedSlider.value);
+      const label = $2("speed-value");
+      if (label) label.textContent = value.toFixed(1) + "x";
+      clearTimeout(speedTimer);
+      speedTimer = setTimeout(() => void command({ type: "speed", value: Math.round(value * 10) / 10 }), 150);
+    });
+  }
+  for (const preset of document.querySelectorAll("[data-speed-preset]")) {
+    preset.addEventListener("click", () => applySpeed(Number(preset.dataset.speedPreset)));
+  }
+  if (speedButton) {
+    speedButton.setAttribute("aria-expanded", "false");
+    speedButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (speedMenuOpen()) closeSpeedMenu();
+      else openSpeedMenu();
+    });
+  }
+  var speedApply = $2("speed-apply");
+  if (speedApply) speedApply.addEventListener("click", () => applySpeed($2("speed-custom").value));
+  var speedCustom = $2("speed-custom");
+  if (speedCustom) {
+    speedCustom.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      applySpeed(speedCustom.value);
+    });
+  }
+  var speedDown = $2("speed-down");
+  if (speedDown) speedDown.addEventListener("click", () => applySpeed(Math.max(1, Math.round((currentSpeed() - 0.5) * 10) / 10)));
+  var speedUp = $2("speed-up");
+  if (speedUp) speedUp.addEventListener("click", () => applySpeed(Math.min(3, Math.round((currentSpeed() + 0.5) * 10) / 10)));
+  var speedHelpOpen = $2("speed-help-open");
+  if (speedHelpOpen) speedHelpOpen.addEventListener("click", () => openSpeedHelp());
+  var speedHelpClose = $2("speed-help-close");
+  if (speedHelpClose) speedHelpClose.addEventListener("click", () => closeSpeedHelp());
+  if (speedHelpBackdrop) {
+    speedHelpBackdrop.addEventListener("click", (event) => {
+      if (event.target === speedHelpBackdrop) closeSpeedHelp();
+    });
+  }
+  if (speedMenu) {
+    speedMenu.addEventListener("click", (event) => event.stopPropagation());
+    document.addEventListener("pointerdown", (event) => {
+      if (!speedMenuOpen()) return;
+      if (speedMenu.contains(event.target) || (speedButton && speedButton.contains(event.target))) return;
+      closeSpeedMenu();
+    }, true);
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (speedMenuOpen()) {
+      event.preventDefault();
+      closeSpeedMenu();
+      return;
+    }
+    if (speedHelpBackdrop && !speedHelpBackdrop.hidden) {
+      event.preventDefault();
+      closeSpeedHelp();
+    }
+  });
   $2("update-check").addEventListener("click", () => void runUpdateAction("check"));
   $2("update-action").addEventListener("click", () => void runUpdateAction("action"));
   $2("update-cancel").addEventListener("click", () => void runUpdateAction("cancel"));

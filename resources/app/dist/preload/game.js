@@ -488,6 +488,7 @@ function scan(doc) {
   }
   for (const element of Array.from(doc.querySelectorAll('object[type="application/x-shockwave-flash"], object[data$=".swf"], embed[type="application/x-shockwave-flash"]'))) {
     if ((_b = element.parentElement) == null ? void 0 : _b.closest("object,embed")) continue;
+    if (element.closest("#resizeTarget")) continue;
     if (!dimensions.has(element)) {
       const rect = element.getBoundingClientRect();
       dimensions.set(element, { width: Number(element.getAttribute("width")) || rect.width || 1200, height: Number(element.getAttribute("height")) || rect.height || 700 });
@@ -505,9 +506,26 @@ function scan(doc) {
   }
   return hasPassword;
 }
+var GAME_FIT_CSS = "html.naruto-game,html.naruto-game body{overflow:hidden!important;background-color:#000!important}" + "html.naruto-game #resizeTarget{width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;overflow:hidden!important}" + "html.naruto-game #resizeTarget>object,html.naruto-game #resizeTarget>object>embed{display:block!important;width:100%!important;height:100%!important;margin:0!important}";
+function ensureGameFit(doc) {
+  const target = doc.getElementById("resizeTarget");
+  if (!target) return;
+  if (!target.querySelector('object[type*="shockwave"], object[data$=".swf"], embed[type*="shockwave"]')) return;
+  const root = doc.documentElement;
+  if (!root) return;
+  if (!doc.getElementById("naruto-game-fit")) {
+    const style = doc.createElement("style");
+    style.id = "naruto-game-fit";
+    style.textContent = GAME_FIT_CSS;
+    (doc.head || root).appendChild(style);
+  }
+  const pageControlled = target.style.width === "1px" || target.style.height === "1px";
+  root.classList.toggle("naruto-game", !pageControlled);
+}
 document.addEventListener("DOMContentLoaded", () => {
   var _a;
   scan(document);
+  ensureGameFit(document);
   if (brazilLogin) {
     void import_electron.webFrame.executeJavaScript(`(${installBrazilLoginCompatibility.toString()})()`).catch(() => {
       var _a2;
@@ -524,6 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   setInterval(() => {
     const hasPassword = scan(document);
+    ensureGameFit(document);
     void invoke("game:form-state", { hasPassword }).catch(() => {
     });
     if (current && host) {

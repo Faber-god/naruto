@@ -7,6 +7,7 @@ param(
   [string]$UpdateZip = '',
   [string]$FullZip = '',
   [string]$Proxy = '',
+  [switch]$SkipFull,
   [switch]$DryRun
 )
 
@@ -21,6 +22,7 @@ if ([string]::IsNullOrWhiteSpace($Tag)) { $Tag = 'v' + $Version }
 if ([string]::IsNullOrWhiteSpace($UpdateZip)) { $UpdateZip = Join-Path $ReleaseDir ('Naruto-Windows-v' + $Version + '-update.zip') }
 $UpdateJson = Join-Path $ReleaseDir 'update.json'
 if ([string]::IsNullOrWhiteSpace($FullZip)) { $FullZip = Join-Path (Split-Path $SourceRoot -Parent) ('Naruto-Windows-v' + $Version + '-full.zip') }
+if ($SkipFull) { $FullZip = '' }
 if ([string]::IsNullOrWhiteSpace($Notes)) { $Notes = 'Naruto-Windows v' + $Version }
 
 function Format-Template([string]$Template, $Vars) {
@@ -73,7 +75,10 @@ if ($Version -notmatch '^\d{1,6}\.\d{1,6}\.\d{1,6}$') { Fail 'invalid-version' }
 
 Write-Host (T 'releaseStart' @{ version = $Version; tag = $Tag })
 
-foreach ($file in @($UpdateZip, $UpdateJson, $FullZip)) {
+$assetFiles = @($UpdateZip, $UpdateJson)
+if (-not [string]::IsNullOrWhiteSpace($FullZip)) { $assetFiles += $FullZip }
+
+foreach ($file in $assetFiles) {
   if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
     Fail ('file-missing:' + [IO.Path]::GetFileName($file))
   }
@@ -156,16 +161,18 @@ if ($view.code -eq 0) {
   Write-Host (T 'releaseCreate' @{ tag = $Tag })
 }
 
-foreach ($file in @($UpdateZip, $UpdateJson, $FullZip)) {
+foreach ($file in $assetFiles) {
   Write-Host (T 'releaseUpload' @{ file = [IO.Path]::GetFileName($file) })
 }
-$upload = Invoke-Gh @('release', 'upload', $Tag, '--repo', $Repo, '--clobber', $UpdateZip, $UpdateJson, $FullZip)
+$uploadArgs = @('release', 'upload', $Tag, '--repo', $Repo, '--clobber') + $assetFiles
+$upload = Invoke-Gh $uploadArgs
 if ($upload.code -ne 0) { Fail 'upload' }
 
 $assetList = Invoke-Gh @('release', 'view', $Tag, '--repo', $Repo, '--json', 'assets', '--jq', '.assets[].name')
 if ($assetList.code -ne 0) { Fail 'asset-list' }
 $assetNames = @($assetList.output | Where-Object { $_ -is [string] })
-foreach ($expected in @([IO.Path]::GetFileName($UpdateZip), 'update.json', [IO.Path]::GetFileName($FullZip))) {
+$expectedAssets = @($assetFiles | ForEach-Object { [IO.Path]::GetFileName($_) })
+foreach ($expected in $expectedAssets) {
   if ($assetNames -notcontains $expected) {
     Fail ('asset-missing:' + $expected)
   }

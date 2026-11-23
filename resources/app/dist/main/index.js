@@ -1,6 +1,7 @@
 "use strict";
 const patchService = require("./patch-service.js");
 const { UpdateService } = require("./update-service.js");
+const speedService = require("./speed-service.js");
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -67,7 +68,7 @@ var init_appearance = __esm({
 
 // src/main/config.ts
 function defaultLayout() {
-  return { version: 1, tabs: [], activeId: null, preferences: { muted: false, flash: "34", theme: "dark", titleBarColor: null, region: "br", lobbyBackground: null, lobbyMotion: true, updateAutoCheck: true }, update: { lastCheckedAt: 0, lastResult: "", lastVersion: "", consecutiveFailures: 0, notifiedVersion: "" }, bounds: { width: 1280, height: 850 }, maximized: false, fullscreen: false };
+  return { version: 1, tabs: [], activeId: null, preferences: { muted: false, flash: "34", theme: "dark", titleBarColor: null, region: "br", lobbyBackground: null, lobbyMotion: true, updateAutoCheck: true, speedRate: 1 }, update: { lastCheckedAt: 0, lastResult: "", lastVersion: "", consecutiveFailures: 0, notifiedVersion: "" }, bounds: { width: 1280, height: 850 }, maximized: false, fullscreen: false };
 }
 function normalizeLayout(raw) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
@@ -96,7 +97,12 @@ function normalizeLayout(raw) {
       region: validRegion((_g = value.preferences) == null ? void 0 : _g.region) ? value.preferences.region : "br",
       lobbyBackground: validTitleColor((_h = value.preferences) == null ? void 0 : _h.lobbyBackground) ? value.preferences.lobbyBackground.toLowerCase() : null,
       lobbyMotion: ((_i = value.preferences) == null ? void 0 : _i.lobbyMotion) !== false,
-      updateAutoCheck: ((_j = value.preferences) == null ? void 0 : _j.updateAutoCheck) !== false
+      updateAutoCheck: ((_j = value.preferences) == null ? void 0 : _j.updateAutoCheck) !== false,
+      speedRate: (() => {
+        var _s = value.preferences;
+        const number = Number(_s == null ? void 0 : _s.speedRate);
+        return Number.isFinite(number) && number > 1 ? Math.min(3, Math.round(number * 10) / 10) : 1;
+      })()
     },
     update: (() => {
       var _k, _l, _m, _n;
@@ -3212,7 +3218,7 @@ var GameSessions = class {
       nodeIntegrationInSubFrames: false,
       contextIsolation: true,
       worldSafeExecuteJavaScript: true,
-      sandbox: true,
+      sandbox: false,
       enableRemoteModule: false,
       backgroundThrottling: false,
       webSecurity: true,
@@ -3227,6 +3233,13 @@ var GameSessions = class {
     view.setBackgroundColor(import_electron.nativeTheme.shouldUseDarkColors ? "#1c1c1c" : "#f5f5f5");
     view.webContents.setAudioMuted(true);
     const contents = view.webContents;
+    view.webContents.on("dom-ready", () => {
+      void speedService.attach(contents);
+      setTimeout(() => void speedService.attach(contents), 3e3);
+    });
+    view.webContents.on("did-stop-loading", () => { void speedService.attach(contents); });
+    view.webContents.on("did-navigate", () => { void speedService.attach(contents); });
+    view.webContents.once("destroyed", () => speedService.detach(contents));
     const session5 = contents.session;
     const targetedPatch = process.env.NARUTO_TARGETED_PATCH === "1";
     try {
@@ -5473,6 +5486,7 @@ if (process.env.NARUTO_DATA_DIR) import_electron8.app.setPath("userData", import
 else import_electron8.app.setPath("userData", import_path10.default.join(import_electron8.app.getPath("appData"), "Naruto-Windows"));
 var config = new ConfigStore(import_electron8.app.getPath("userData"));
 var layout = config.read();
+if (Number(layout.preferences.speedRate) > 1) import_electron8.app.commandLine.appendSwitch("no-sandbox");
 import_electron8.nativeTheme.themeSource = layout.preferences.theme;
 var flash = windowsSmoke ? { available: false } : findFlash(root, layout.preferences.flash);
 if (flash.available) {
@@ -5787,6 +5801,7 @@ function state() {
     recovery,
     refresh: refreshState(),
     flash,
+    speedAvailable: speedService.isAvailable(),
     version: import_electron8.app.getVersion(),
     update: updateService ? updateService.snapshot() : null,
     memory: memoryService ? memoryService.snapshot() : null,
@@ -6233,6 +6248,22 @@ async function command(input) {
     case "lobby-motion":
       if (typeof input.value !== "boolean") throw new Error("\u542F\u52A8\u9875\u52A8\u6001\u6548\u679C\u8BBE\u7F6E\u65E0\u6548");
       return saveLobbyPreference("lobbyMotion", input.value);
+    case "speed": {
+      const value = Number(input.value);
+      if (!Number.isFinite(value) || value < 1 || value > 3) break;
+      layout.preferences.speedRate = Math.round(value * 10) / 10;
+      changed();
+      void speedService.setRate(layout.preferences.speedRate).then(() => {
+        const rescan = () => {
+          if (!games) return;
+          for (const tab of games.tabs) void speedService.attach(tab.view.webContents);
+        };
+        rescan();
+        setTimeout(rescan, 2e3);
+        setTimeout(rescan, 5e3);
+      });
+      break;
+    }
     case "flash":
       if (input.version === "34" || input.version === "31") {
         if (!findFlash(root, input.version).available) {
@@ -6326,6 +6357,8 @@ function updateMenuItems(current = state()) {
 async function createWindow() {
   var _a, _b;
   messagesConfig = loadMessages();
+  speedService.configure({ root, log });
+  void speedService.setRate(layout.preferences.speedRate);
   updateService = new UpdateService({
     root,
     installRoot: import_path10.default.dirname(process.execPath),

@@ -1,12 +1,12 @@
 {
     "schema":  1,
-    "version":  "1.9.2",
+    "version":  "1.9.3",
     "minVersion":  "1.9.0",
-    "assetName":  "Naruto-Windows-v1.9.2-update.zip",
-    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.2/Naruto-Windows-v1.9.2-update.zip",
-    "size":  37108130,
-    "sha256":  "56ed13b9d9b56fa846c479b242015f85851e52b97581701b50520425482c74a1",
-    "notes":  "v1.9.2 adds in-client memory usage display, streaming patch downloads with hash verification, and the 810021 activity patch batch.",
-    "publishedAt":  "2026-11-20T15:39:19.6706581Z",
+    "assetName":  "Naruto-Windows-v1.9.3-update.zip",
+    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.3/Naruto-Windows-v1.9.3-update.zip",
+    "size":  37149184,
+    "sha256":  "0d8547d6ef10893441d58673354b397b0cb1d5a9bd290af82ca82b80f8b88f82",
+    "notes":  "v1.9.3 adds in-client game speed control (1.0x-3.0x) with a native speed hook and toolbar menu.",
+    "publishedAt":  "2026-11-23T14:17:51.8526637Z",
     "patchesIncluded":  true
 }
