@@ -1,9 +1,9 @@
 {
-  "version": "1.9.3",
-  "builtAt": "2026-11-23T22:16:22+08:00",
+  "version": "1.9.4",
+  "builtAt": "2026-11-24T10:30:00+08:00",
   "electron": "11.5.0",
   "platform": "win32",
   "architecture": "x64",
-  "notes": "v1.9.3 adds in-client game speed control (1.0x-3.0x) with a native speed hook and toolbar menu",
+  "notes": "v1.9.4 applies speed changes instantly without restart, confirms per-tab injection, isolates patch metrics per session, and scales the Flash stage to reduce CPU load",
   "patchedFrom": "1.9.0"
 }

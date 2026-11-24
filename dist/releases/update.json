@@ -1,12 +1,12 @@
 {
     "schema":  1,
-    "version":  "1.9.3",
+    "version":  "1.9.4",
     "minVersion":  "1.9.0",
-    "assetName":  "Naruto-Windows-v1.9.3-update.zip",
-    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.3/Naruto-Windows-v1.9.3-update.zip",
-    "size":  37149184,
-    "sha256":  "0d8547d6ef10893441d58673354b397b0cb1d5a9bd290af82ca82b80f8b88f82",
-    "notes":  "v1.9.3 adds in-client game speed control (1.0x-3.0x) with a native speed hook and toolbar menu.",
-    "publishedAt":  "2026-11-23T14:17:51.8526637Z",
+    "assetName":  "Naruto-Windows-v1.9.4-update.zip",
+    "url":  "https://github.com/Faber-god/naruto/releases/download/v1.9.4/Naruto-Windows-v1.9.4-update.zip",
+    "size":  37150363,
+    "sha256":  "1561cd0f0349b0f4ab0200ac4fe2788c46d46155d406ce73648fef5970070064",
+    "notes":  "v1.9.4 applies speed changes instantly without restart, confirms per-tab injection, isolates patch metrics per session, and scales the Flash stage to reduce CPU load",
+    "publishedAt":  "2026-11-24T15:44:06.5928848Z",
     "patchesIncluded":  true
 }

@@ -1,4 +1,4 @@
-NARUTO FABER 1.9.3 — GUIA RÁPIDO
+NARUTO FABER 1.9.4 — GUIA RÁPIDO
 
 1. Clique com o botão direito no ZIP e escolha “Extrair tudo”.
 2. Abra a pasta extraída.

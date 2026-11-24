@@ -154,11 +154,11 @@ async function attach(contents) {
   }
   for (const pid of await queryPpapiProcesses()) targets.add(pid);
   emit("targets", { pids: Array.from(targets).join(",") || "-" });
-  let any = false;
+  let confirmed = targets.size > 0;
   for (const pid of targets) {
-    if (await injectPid(pid)) any = true;
+    if (!injected.has(pid) && !await injectPid(pid)) confirmed = false;
   }
-  return any;
+  return confirmed;
 }
 
 function detach(contents) {
@@ -170,11 +170,12 @@ function detach(contents) {
 }
 
 async function setRate(value) {
-  rate = normalizeRate(value);
-  emit("rate", { rate });
+  const requested = normalizeRate(value);
+  emit("rate", { rate: requested });
   if (!isAvailable()) return { ok: false, ready: false, rate };
-  if (rate === 1 && injected.size === 0) return { ok: true, ready: true, rate };
-  const result = await runSpeedctl(["rate", String(rate)]);
+  if (requested === 1 && rate === 1 && injected.size === 0) return { ok: true, ready: true, rate };
+  const result = await runSpeedctl(["rate", String(requested)]);
+  if (result.ok) rate = requested;
   return { ok: result.ok, ready: true, rate, detail: result.detail || "" };
 }
 

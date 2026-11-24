@@ -506,11 +506,27 @@ function scan(doc) {
   }
   return hasPassword;
 }
-var GAME_FIT_CSS = "html.naruto-game,html.naruto-game body{overflow:hidden!important;background-color:#000!important}" + "html.naruto-game #resizeTarget{width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;overflow:hidden!important}" + "html.naruto-game #resizeTarget>object,html.naruto-game #resizeTarget>object>embed{display:block!important;width:100%!important;height:100%!important;margin:0!important}";
+var GAME_FIT_CSS = "html.naruto-game,html.naruto-game body{overflow:hidden!important;background-color:#000!important}" + "html.naruto-game #resizeTarget{width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;overflow:hidden!important}" + "html.naruto-game #resizeTarget>object,html.naruto-game #resizeTarget>object>embed{display:block!important;margin:0!important}";
+// Flash 是 CPU 软件光栅化：舞台尺寸越大每帧像素越多，整窗放大容易把单核压满。
+var GAME_FIT_MAX_WIDTH = 1536;
+var GAME_FIT_MAX_HEIGHT = 960;
+// 游戏页自身的最小舞台尺寸，低于它画面会被裁切。
+var GAME_STAGE_MIN_WIDTH = 1020;
+var GAME_STAGE_MIN_HEIGHT = 600;
+// 渲染比例：小于 1 时游戏按更小尺寸绘制，再交给合成器放大铺满窗口。
+var GAME_FIT_RENDER_SCALE = (function () {
+  const raw = Number(typeof process !== "undefined" && process.env ? process.env.NARUTO_RENDER_SCALE : NaN);
+  return Number.isFinite(raw) && raw >= 0.5 && raw <= 1 ? raw : 0.78;
+})();
+function setStageStyle(node, key, value) {
+  if (node.style[key] !== value) node.style[key] = value;
+}
 function ensureGameFit(doc) {
   const target = doc.getElementById("resizeTarget");
   if (!target) return;
-  if (!target.querySelector('object[type*="shockwave"], object[data$=".swf"], embed[type*="shockwave"]')) return;
+  const object = target.querySelector('object[type*="shockwave"], object[data$=".swf"]');
+  const flash = object || target.querySelector('embed[type*="shockwave"]');
+  if (!flash) return;
   const root = doc.documentElement;
   if (!root) return;
   if (!doc.getElementById("naruto-game-fit")) {
@@ -521,11 +537,43 @@ function ensureGameFit(doc) {
   }
   const pageControlled = target.style.width === "1px" || target.style.height === "1px";
   root.classList.toggle("naruto-game", !pageControlled);
+  if (pageControlled) return;
+  // 游戏页会把 Flash 对象绝对定位，flex 居中无效；这里按视口坐标固定定位并居中。
+  const rect = target.getBoundingClientRect();
+  const viewWidth = Math.max(1, rect.width);
+  const viewHeight = Math.max(1, rect.height);
+  const renderScale = GAME_FIT_RENDER_SCALE;
+  const floorScale = Math.min(1, Math.max(GAME_STAGE_MIN_WIDTH / viewWidth, GAME_STAGE_MIN_HEIGHT / viewHeight));
+  const scale = Math.max(Math.min(renderScale, GAME_FIT_MAX_WIDTH / viewWidth, GAME_FIT_MAX_HEIGHT / viewHeight), floorScale);
+  const width = Math.round(viewWidth * scale);
+  const height = Math.round(viewHeight * scale);
+  const left = Math.round(rect.left + (viewWidth - width) / 2);
+  const top = Math.round(rect.top + (viewHeight - height) / 2);
+  const outer = object || flash;
+  const inner = object ? object.querySelector("embed") : null;
+  setStageStyle(outer, "position", "fixed");
+  setStageStyle(outer, "left", `${left}px`);
+  setStageStyle(outer, "top", `${top}px`);
+  setStageStyle(outer, "width", `${width}px`);
+  setStageStyle(outer, "height", `${height}px`);
+  setStageStyle(outer, "display", "block");
+  setStageStyle(outer, "margin", "0px");
+  setStageStyle(outer, "transformOrigin", "50% 50%");
+  setStageStyle(outer, "transform", scale < 1 ? `scale(${1 / scale})` : "none");
+  if (inner) {
+    setStageStyle(inner, "width", `${width}px`);
+    setStageStyle(inner, "height", `${height}px`);
+    setStageStyle(inner, "display", "block");
+    setStageStyle(inner, "margin", "0px");
+  }
 }
 document.addEventListener("DOMContentLoaded", () => {
   var _a;
   scan(document);
   ensureGameFit(document);
+  window.addEventListener("resize", () => {
+    requestAnimationFrame(() => ensureGameFit(document));
+  }, { passive: true });
   if (brazilLogin) {
     void import_electron.webFrame.executeJavaScript(`(${installBrazilLoginCompatibility.toString()})()`).catch(() => {
       var _a2;

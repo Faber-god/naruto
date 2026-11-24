@@ -3234,6 +3234,7 @@ var GameSessions = class {
     view.webContents.setAudioMuted(true);
     const contents = view.webContents;
     view.webContents.on("dom-ready", () => {
+      if (speedService.getRate() <= 1) return;
       void speedService.attach(contents);
       setTimeout(() => void speedService.attach(contents), 3e3);
     });
@@ -5486,7 +5487,9 @@ if (process.env.NARUTO_DATA_DIR) import_electron8.app.setPath("userData", import
 else import_electron8.app.setPath("userData", import_path10.default.join(import_electron8.app.getPath("appData"), "Naruto-Windows"));
 var config = new ConfigStore(import_electron8.app.getPath("userData"));
 var layout = config.read();
-if (Number(layout.preferences.speedRate) > 1) import_electron8.app.commandLine.appendSwitch("no-sandbox");
+layout.preferences.speedRate = 1;
+let speedQueue = Promise.resolve();
+import_electron8.app.commandLine.appendSwitch("no-sandbox");
 import_electron8.nativeTheme.themeSource = layout.preferences.theme;
 var flash = windowsSmoke ? { available: false } : findFlash(root, layout.preferences.flash);
 if (flash.available) {
@@ -6251,17 +6254,19 @@ async function command(input) {
     case "speed": {
       const value = Number(input.value);
       if (!Number.isFinite(value) || value < 1 || value > 3) break;
-      layout.preferences.speedRate = Math.round(value * 10) / 10;
-      changed();
-      void speedService.setRate(layout.preferences.speedRate).then(() => {
-        const rescan = () => {
-          if (!games) return;
-          for (const tab of games.tabs) void speedService.attach(tab.view.webContents);
-        };
-        rescan();
-        setTimeout(rescan, 2e3);
-        setTimeout(rescan, 5e3);
-      });
+      speedQueue = speedQueue.then(async () => {
+        const result = await speedService.setRate(value);
+        if (!result.ok) return report(messagesConfig.ui.speed.failed);
+        layout.preferences.speedRate = result.rate;
+        changed();
+        if (result.rate === 1) return report(messagesConfig.ui.speed.restored);
+        let confirmed = games.tabs.length > 0;
+        for (const tab of games.tabs) {
+          if (!await speedService.attach(tab.view.webContents)) confirmed = false;
+        }
+        if (!confirmed) report(messagesConfig.ui.speed.partial);
+      }).catch(() => report(messagesConfig.ui.speed.failed));
+      await speedQueue;
       break;
     }
     case "flash":
@@ -6358,7 +6363,7 @@ async function createWindow() {
   var _a, _b;
   messagesConfig = loadMessages();
   speedService.configure({ root, log });
-  void speedService.setRate(layout.preferences.speedRate);
+
   updateService = new UpdateService({
     root,
     installRoot: import_path10.default.dirname(process.execPath),

@@ -352,7 +352,7 @@ class PatchService {
     this.patchVerified = new Map();
     this.logFile = "";
     this.metrics = null;
-    this.targetedMetrics = null;
+
     this.prefetchPromise = null;
   }
 
@@ -467,7 +467,7 @@ class PatchService {
     if (!manifest || this.attachedTargeted.has(webContents)) return false;
     if (manifest.region && manifest.region !== region) return false;
     const debuggerApi = webContents.debugger;
-    this.targetedMetrics = { startedAt: Date.now(), hits: 0, cacheHits: 0, passed: 0, errors: 0 };
+    const metrics = { startedAt: Date.now(), hits: 0, cacheHits: 0, passed: 0, errors: 0 };
     try {
       if (!debuggerApi.isAttached()) debuggerApi.attach("1.3");
       await debuggerApi.sendCommand("Fetch.enable", {
@@ -492,7 +492,7 @@ class PatchService {
             try {
               const data = fs.readFileSync(cached.file);
               if (data.length) {
-                this.targetedMetrics.cacheHits += 1;
+                metrics.cacheHits += 1;
                 cached.lastAccess = Date.now();
                 const key = cachePaths(url)?.key;
                 if (key && cacheIndex[key]) {
@@ -520,18 +520,18 @@ class PatchService {
             } catch (_) {}
           }
         }
-        this.targetedMetrics.passed += 1;
+        metrics.passed += 1;
         void debuggerApi.sendCommand("Fetch.continueRequest", { requestId }).catch(() => {});
         return;
       }
       const data = this.readPatch(entry);
       if (!data) {
-        this.targetedMetrics.errors += 1;
+        metrics.errors += 1;
         void debuggerApi.sendCommand("Fetch.continueRequest", { requestId }).catch(() => {});
         return;
       }
       this.log(`targeted hit ${entry.path}`);
-      this.targetedMetrics.hits += 1;
+      metrics.hits += 1;
       void debuggerApi.sendCommand("Fetch.fulfillRequest", {
         requestId,
         responseCode: 200,
@@ -545,7 +545,7 @@ class PatchService {
       }).catch(() => {});
     };
     debuggerApi.on("message", onMessage);
-    this.attachedTargeted.set(webContents, { debugger: debuggerApi, onMessage });
+    this.attachedTargeted.set(webContents, { debugger: debuggerApi, onMessage, metrics });
     this.log(`targeted attached patches=${manifest.patches.length}`);
     void this.prefetch();
     return true;
@@ -562,11 +562,11 @@ class PatchService {
         item.debugger.detach();
       }
     } catch (_) {}
-    const metrics = this.targetedMetrics;
+    const metrics = item.metrics;
     this.log(metrics
       ? `targeted detached elapsed=${Date.now() - metrics.startedAt}ms hits=${metrics.hits} cache=${metrics.cacheHits} passed=${metrics.passed} errors=${metrics.errors}`
       : "targeted detached");
-    this.targetedMetrics = null;
+
   }
 
   attach(gameSession, region) {
